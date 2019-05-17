@@ -778,6 +778,7 @@
                 Phase shifts the inputs in 78 ps increments
                 \\ The delay of each S-bit in a VFAT should be increased to match the longest delay incurred by the GEB + Optohybrid routing on that VFAT">
 
+                <!-- updated by update_timing_registers.py-->
                 <!-- START: TIMING_DELAYS DO NOT EDIT -->
                     <node id="TAP_DELAY_VFAT0_BIT0" address="0x0" permission="rw"
                         mask="0x0000001F"
@@ -1934,13 +1935,136 @@
                 <node id="RESET" address="0x0" permission="w"
                     description="Reset the sbit monitor module and re-arm for triggering"
                     fw_write_pulse_signal="reset_monitor"/>
-                <node id="CLUSTER${CLUSTER_IDX}" address="0x1" mask="0x0000ffff" permission="r"
-                    description="Last cluster ${CLUSTER_IDX}"
-                    fw_signal="'0' &amp; frozen_cluster_${CLUSTER_IDX}(13 downto 11) &amp; '0' &amp; frozen_cluster_${CLUSTER_IDX} (10 downto 0)"
-                    generate="true" generate_size="8" generate_address_step="0x1" generate_idx_var="CLUSTER_IDX"/>
-                <node id="L1A_DELAY" address="0x10" mask="0xffffffff" permission="r"
+                <node id="CLUSTER0" address="0x1" mask="0x0000ffff" permission="r"
+                    description="Last cluster 0"
+                    fw_signal="'0' &amp; frozen_cluster_0(13 downto 11) &amp; '0' &amp; frozen_cluster_0 (10 downto 0)"/>
+                <node id="CLUSTER1" address="0x1" mask="0xffff0000" permission="r"
+                    description="Last cluster 1"
+                    fw_signal="'0' &amp; frozen_cluster_1(13 downto 11) &amp; '0' &amp; frozen_cluster_1 (10 downto 0)"/>
+                <node id="CLUSTER2" address="0x2" mask="0x0000ffff" permission="r"
+                    description="Last cluster 2"
+                    fw_signal="'0' &amp; frozen_cluster_2(13 downto 11) &amp; '0' &amp; frozen_cluster_2 (10 downto 0)"/>
+                <node id="CLUSTER3" address="0x2" mask="0xffff0000" permission="r"
+                    description="Last cluster 3"
+                    fw_signal="'0' &amp; frozen_cluster_3(13 downto 11) &amp; '0' &amp; frozen_cluster_3 (10 downto 0)"/>
+                <node id="CLUSTER4" address="0x3" mask="0x0000ffff" permission="r"
+                    description="Last cluster 4"
+                    fw_signal="'0' &amp; frozen_cluster_4(13 downto 11) &amp; '0' &amp; frozen_cluster_4 (10 downto 0)"/>
+                <node id="CLUSTER5" address="0x3" mask="0xffff0000" permission="r"
+                    description="Last cluster 5"
+                    fw_signal="'0' &amp; frozen_cluster_5(13 downto 11) &amp; '0' &amp; frozen_cluster_5 (10 downto 0)"/>
+                <node id="CLUSTER6" address="0x4" mask="0x0000ffff" permission="r"
+                    description="Last cluster 6"
+                    fw_signal="'0' &amp; frozen_cluster_6(13 downto 11) &amp; '0' &amp; frozen_cluster_6 (10 downto 0)"/>
+                <node id="CLUSTER7" address="0x4" mask="0xffff0000" permission="r"
+                    description="Last cluster 7"
+                    fw_signal="'0' &amp; frozen_cluster_7(13 downto 11) &amp; '0' &amp; frozen_cluster_7 (10 downto 0)"/>
+                <node id="L1A_DELAY" address="0x5" mask="0xffffffff" permission="r"
                     description="Number of BX between this sbit and the subsequent L1A"
                     fw_signal="sbitmon_l1a_delay"/>
+            </node>
+
+            <node id="BITSLIP_CNT" address="0x96"
+                    description="Monitor of the S-bit bit-slip alignment">
+            <!-- updated by update_vfat_counters.py-->
+            <!-- START: BITSLIP_CNT DO NOT EDIT -->
+                <node id="VFAT0" address="0x0" permission="r"
+                    description="Bitslip count for VFAT0"
+                    mask="0x7"
+                    fw_signal="bitslip_cnt(0)"/>
+                <node id="VFAT1" address="0x0" permission="r"
+                    description="Bitslip count for VFAT1"
+                    mask="0x38"
+                    fw_signal="bitslip_cnt(1)"/>
+                <node id="VFAT2" address="0x0" permission="r"
+                    description="Bitslip count for VFAT2"
+                    mask="0x1c0"
+                    fw_signal="bitslip_cnt(2)"/>
+                <node id="VFAT3" address="0x0" permission="r"
+                    description="Bitslip count for VFAT3"
+                    mask="0xe00"
+                    fw_signal="bitslip_cnt(3)"/>
+                <node id="VFAT4" address="0x0" permission="r"
+                    description="Bitslip count for VFAT4"
+                    mask="0x7000"
+                    fw_signal="bitslip_cnt(4)"/>
+                <node id="VFAT5" address="0x0" permission="r"
+                    description="Bitslip count for VFAT5"
+                    mask="0x38000"
+                    fw_signal="bitslip_cnt(5)"/>
+                <node id="VFAT6" address="0x0" permission="r"
+                    description="Bitslip count for VFAT6"
+                    mask="0x1c0000"
+                    fw_signal="bitslip_cnt(6)"/>
+                <node id="VFAT7" address="0x0" permission="r"
+                    description="Bitslip count for VFAT7"
+                    mask="0xe00000"
+                    fw_signal="bitslip_cnt(7)"/>
+                <node id="VFAT8" address="0x0" permission="r"
+                    description="Bitslip count for VFAT8"
+                    mask="0x7000000"
+                    fw_signal="bitslip_cnt(8)"/>
+                <node id="VFAT9" address="0x0" permission="r"
+                    description="Bitslip count for VFAT9"
+                    mask="0x38000000"
+                    fw_signal="bitslip_cnt(9)"/>
+                <node id="VFAT10" address="0x1" permission="r"
+                    description="Bitslip count for VFAT10"
+                    mask="0x7"
+                    fw_signal="bitslip_cnt(10)"/>
+                <node id="VFAT11" address="0x1" permission="r"
+                    description="Bitslip count for VFAT11"
+                    mask="0x38"
+                    fw_signal="bitslip_cnt(11)"/>
+                <node id="VFAT12" address="0x1" permission="r"
+                    description="Bitslip count for VFAT12"
+                    mask="0x1c0"
+                    fw_signal="bitslip_cnt(12)"/>
+                <node id="VFAT13" address="0x1" permission="r"
+                    description="Bitslip count for VFAT13"
+                    mask="0xe00"
+                    fw_signal="bitslip_cnt(13)"/>
+                <node id="VFAT14" address="0x1" permission="r"
+                    description="Bitslip count for VFAT14"
+                    mask="0x7000"
+                    fw_signal="bitslip_cnt(14)"/>
+                <node id="VFAT15" address="0x1" permission="r"
+                    description="Bitslip count for VFAT15"
+                    mask="0x38000"
+                    fw_signal="bitslip_cnt(15)"/>
+                <node id="VFAT16" address="0x1" permission="r"
+                    description="Bitslip count for VFAT16"
+                    mask="0x1c0000"
+                    fw_signal="bitslip_cnt(16)"/>
+                <node id="VFAT17" address="0x1" permission="r"
+                    description="Bitslip count for VFAT17"
+                    mask="0xe00000"
+                    fw_signal="bitslip_cnt(17)"/>
+                <node id="VFAT18" address="0x1" permission="r"
+                    description="Bitslip count for VFAT18"
+                    mask="0x7000000"
+                    fw_signal="bitslip_cnt(18)"/>
+                <node id="VFAT19" address="0x1" permission="r"
+                    description="Bitslip count for VFAT19"
+                    mask="0x38000000"
+                    fw_signal="bitslip_cnt(19)"/>
+                <node id="VFAT20" address="0x2" permission="r"
+                    description="Bitslip count for VFAT20"
+                    mask="0x7"
+                    fw_signal="bitslip_cnt(20)"/>
+                <node id="VFAT21" address="0x2" permission="r"
+                    description="Bitslip count for VFAT21"
+                    mask="0x38"
+                    fw_signal="bitslip_cnt(21)"/>
+                <node id="VFAT22" address="0x2" permission="r"
+                    description="Bitslip count for VFAT22"
+                    mask="0x1c0"
+                    fw_signal="bitslip_cnt(22)"/>
+                <node id="VFAT23" address="0x2" permission="r"
+                    description="Bitslip count for VFAT23"
+                    mask="0xe00"
+                    fw_signal="bitslip_cnt(23)"/>
+            <!-- END: BITSLIP_CNT DO NOT EDIT -->
             </node>
 
     </node> <!--TRIG-->
@@ -1958,24 +2082,24 @@
             fw_reg_addr_msb="1"
             fw_reg_addr_lsb="0">
 
-            <node id="GBT_MMCM_LOCKED" address="0x0" permission="r"
+            <node id="CORE_MMCM_LOCKED" address="0x0" permission="r"
                 mask="0x00000001"
-                description="GBT deserialization MMCM locked"
+                description="Core logic MMCM locked"
                 fw_signal="mmcm_locked(1)"/>
-            <node id="LOGIC_MMCM_LOCKED" address="0x0" permission="r"
+            <node id="TRIGGER_MMCM_LOCKED" address="0x0" permission="r"
                 mask="0x00000002"
-                description="User logic MMCM locked"
+                description="Trigger logic MMCM locked"
                 fw_signal="mmcm_locked(0)"/>
-            <node id="GBT_MMCM_UNLOCKED_CNT" address="0x0" permission="r"
+            <node id="CORE_MMCM_UNLOCKED_CNT" address="0x0" permission="r"
                 mask="0x00ff0000"
                 description="GBT deserialization MMCM unlocked cnt"
                 fw_cnt_en_signal="mmcm_unlocked(1)"
-                fw_signal="cnt_eprt_mmcm_unlocked"/>
-            <node id="LOGIC_MMCM_UNLOCKED_CNT" address="0x0" permission="r"
+                fw_signal="cnt_gbt_mmcm_unlocked"/>
+            <node id="TRIGGER_MMCM_UNLOCKED_CNT" address="0x0" permission="r"
                 mask="0xff000000"
                 description="User logic MMCM unlocked cnt"
                 fw_cnt_en_signal="mmcm_unlocked(0)"
-                fw_signal="cnt_dskw_mmcm_unlocked"/>
+                fw_signal="cnt_logic_mmcm_unlocked"/>
     </node>
 
     <!--GBT module -->
@@ -1983,9 +2107,9 @@
             description="Contains functionality for controlling and monitoring the bidirectional GBTx to FPGA link"
             fw_is_module="true"
             fw_module_file="../src/gbt/gbt.vhd"
-            fw_user_clock_signal="clock_i"
-            fw_bus_clock_signal="clock_i"
-            fw_bus_reset_signal="ipb_reset_i"
+            fw_user_clock_signal="clk_1x"
+            fw_bus_clock_signal="clk_1x"
+            fw_bus_reset_signal="ipb_rst_i"
             fw_master_bus_signal="ipb_mosi_i"
             fw_slave_bus_signal="ipb_miso_o"
             fw_reg_addr_msb="3"
@@ -1996,18 +2120,13 @@
                     mask="0xffffff00"
                     description="Number of wishbone responses sent back"
                     fw_cnt_en_signal="ipb_miso.ipb_ack"
-                    fw_cnt_reset_signal="cnt_reset"
+                    fw_cnt_reset_signal="cnt_rst"
                     fw_cnt_snap_signal="cnt_snap"
                     fw_signal="cnt_ipb_response"/>
                 <node id="TX_READY" address="0x1" permission="r"
                     mask="0x00000001"
                     description="GBT TX READY from GBTx Chip"
                     fw_signal="gbt_txready_i"/>
-                <node id="TX_DELAY" address="0x1" permission="rw"
-                    mask="0x1f0"
-                    description="GBT TX IODELAY in 78 ps steps, 0-31"
-                    fw_default="0x0"
-                    fw_signal="tx_delay"/>
             </node> <!--TX-->
 
             <node id="RX" address="0x4" description = "Controls and monitors the transmit link from the GBTx to the FPGA">
@@ -2019,18 +2138,22 @@
                     mask="0x00000002"
                     description="GBT RX VALID from GBTx Chip"
                     fw_signal="gbt_rxvalid_i"/>
+                <node id="RX_UNSTABLE" address="0x0" permission="r"
+                    mask="0x00000004"
+                    description="GBT RX Link is Unstable"
+                    fw_signal="gbt_link_unstable"/>
                 <node id="CNT_REQUEST_RECEIVED" address="0x0" permission="r"
                     mask="0xffffff00"
                     description="Number of wishbone requests received"
                     fw_cnt_en_signal="ipb_mosi.ipb_strobe"
-                    fw_cnt_reset_signal="cnt_reset"
+                    fw_cnt_reset_signal="cnt_rst"
                     fw_cnt_snap_signal="cnt_snap"
                     fw_signal="cnt_ipb_request"/>
                 <node id="CNT_LINK_ERR" address="0x1" permission="r"
                     mask="0x00ffffff"
                     description="Number of GBT link errrors detected"
-                    fw_cnt_en_signal="gbt_link_err_ready"
-                    fw_cnt_reset_signal="cnt_reset"
+                    fw_cnt_en_signal="gbt_link_rdy and gbt_link_err"
+                    fw_cnt_reset_signal="cnt_rst"
                     fw_cnt_snap_signal="cnt_snap"
                     fw_signal="cnt_link_err"/>
             </node> <!--RX-->
@@ -2046,6 +2169,10 @@
                 description="GBT Force Resync"
                 fw_write_pulse_signal="resync_force"/>
             </node> <!--TTC-->
+
+            <node id="RESET_CNT" address="0x8" permission="w"
+                description="Reset counters"
+                fw_write_pulse_signal="cnt_rst_ipb"/>
 
 
     </node> <!--GBT-->

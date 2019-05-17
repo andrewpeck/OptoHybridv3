@@ -49,7 +49,7 @@ module reset (
   // Hold (Long) Reset
   //--------------------------------------------------------------------------------------------------------------------
 
-  parameter HOLD_RESET_CNT_MAX = 2**22-1;
+  parameter HOLD_RESET_CNT_MAX = 2**18-1;
   parameter HOLD_RESET_BITS    = $clog2 (HOLD_RESET_CNT_MAX);
 
   reg [HOLD_RESET_BITS-1:0] hold_reset_cnt = 0;

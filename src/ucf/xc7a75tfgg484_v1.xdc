@@ -1,7 +1,7 @@
 ## CLOCKS FROM GBTX1 CLOCKDESX LINES
 ## BANK 14
-set_property PACKAGE_PIN W19 [get_ports logic_clock_p]
-set_property PACKAGE_PIN W20 [get_ports logic_clock_n]
+set_property PACKAGE_PIN W19 [get_ports clock_p]
+set_property PACKAGE_PIN W20 [get_ports clock_n]
 
 ## MGT CLOCKS
 

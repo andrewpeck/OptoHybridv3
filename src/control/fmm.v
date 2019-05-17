@@ -109,20 +109,4 @@ module fmm (
   else          fmm_trig_stop <= (fmm_sm != fmm_run); // Stop clct trigger sequencer
   end
 
-//----------------------------------------------------------------------------------------------------------------------
-// Simulation state machine display
-//----------------------------------------------------------------------------------------------------------------------
-
-  reg [55:0] fmm_sm_disp;
-
-  always @* begin
-  case (fmm_sm)
-  fmm_startup:  fmm_sm_disp <= "startup";
-  fmm_resync:   fmm_sm_disp <= "resync ";
-  fmm_wait_bx0: fmm_sm_disp <= "waitbx0";
-  fmm_run:      fmm_sm_disp <= "run    ";
-  default       fmm_sm_disp <= "default";
-  endcase
-  end
-
 endmodule

@@ -258,7 +258,7 @@ package registers is
     -- Connects to the trigger control module
     --============================================================================
 
-    constant REG_TRIG_NUM_REGS : integer := 121;
+    constant REG_TRIG_NUM_REGS : integer := 120;
     constant REG_TRIG_ADDRESS_MSB : integer := 7;
     constant REG_TRIG_ADDRESS_LSB : integer := 0;
     constant REG_TRIG_CTRL_VFAT_MASK_ADDR    : std_logic_vector(7 downto 0) := x"00";
@@ -1898,37 +1898,133 @@ package registers is
     constant REG_TRIG_SBIT_MONITOR_CLUSTER0_MSB    : integer := 15;
     constant REG_TRIG_SBIT_MONITOR_CLUSTER0_LSB     : integer := 0;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_ADDR    : std_logic_vector(7 downto 0) := x"92";
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_MSB    : integer := 15;
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_ADDR    : std_logic_vector(7 downto 0) := x"91";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_MSB    : integer := 31;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER1_LSB     : integer := 16;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER2_ADDR    : std_logic_vector(7 downto 0) := x"93";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER2_ADDR    : std_logic_vector(7 downto 0) := x"92";
     constant REG_TRIG_SBIT_MONITOR_CLUSTER2_MSB    : integer := 15;
     constant REG_TRIG_SBIT_MONITOR_CLUSTER2_LSB     : integer := 0;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_ADDR    : std_logic_vector(7 downto 0) := x"94";
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_MSB    : integer := 15;
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_ADDR    : std_logic_vector(7 downto 0) := x"92";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_MSB    : integer := 31;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER3_LSB     : integer := 16;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER4_ADDR    : std_logic_vector(7 downto 0) := x"95";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER4_ADDR    : std_logic_vector(7 downto 0) := x"93";
     constant REG_TRIG_SBIT_MONITOR_CLUSTER4_MSB    : integer := 15;
     constant REG_TRIG_SBIT_MONITOR_CLUSTER4_LSB     : integer := 0;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_ADDR    : std_logic_vector(7 downto 0) := x"96";
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_MSB    : integer := 15;
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_ADDR    : std_logic_vector(7 downto 0) := x"93";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_MSB    : integer := 31;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER5_LSB     : integer := 16;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER6_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER6_ADDR    : std_logic_vector(7 downto 0) := x"94";
     constant REG_TRIG_SBIT_MONITOR_CLUSTER6_MSB    : integer := 15;
     constant REG_TRIG_SBIT_MONITOR_CLUSTER6_LSB     : integer := 0;
 
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_ADDR    : std_logic_vector(7 downto 0) := x"98";
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_MSB    : integer := 15;
-    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_LSB     : integer := 0;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_ADDR    : std_logic_vector(7 downto 0) := x"94";
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_MSB    : integer := 31;
+    constant REG_TRIG_SBIT_MONITOR_CLUSTER7_LSB     : integer := 16;
 
-    constant REG_TRIG_SBIT_MONITOR_L1A_DELAY_ADDR    : std_logic_vector(7 downto 0) := x"a0";
+    constant REG_TRIG_SBIT_MONITOR_L1A_DELAY_ADDR    : std_logic_vector(7 downto 0) := x"95";
     constant REG_TRIG_SBIT_MONITOR_L1A_DELAY_MSB    : integer := 31;
     constant REG_TRIG_SBIT_MONITOR_L1A_DELAY_LSB     : integer := 0;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT0_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT0_MSB    : integer := 2;
+    constant REG_TRIG_BITSLIP_CNT_VFAT0_LSB     : integer := 0;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT1_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT1_MSB    : integer := 5;
+    constant REG_TRIG_BITSLIP_CNT_VFAT1_LSB     : integer := 3;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT2_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT2_MSB    : integer := 8;
+    constant REG_TRIG_BITSLIP_CNT_VFAT2_LSB     : integer := 6;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT3_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT3_MSB    : integer := 11;
+    constant REG_TRIG_BITSLIP_CNT_VFAT3_LSB     : integer := 9;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT4_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT4_MSB    : integer := 14;
+    constant REG_TRIG_BITSLIP_CNT_VFAT4_LSB     : integer := 12;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT5_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT5_MSB    : integer := 17;
+    constant REG_TRIG_BITSLIP_CNT_VFAT5_LSB     : integer := 15;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT6_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT6_MSB    : integer := 20;
+    constant REG_TRIG_BITSLIP_CNT_VFAT6_LSB     : integer := 18;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT7_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT7_MSB    : integer := 23;
+    constant REG_TRIG_BITSLIP_CNT_VFAT7_LSB     : integer := 21;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT8_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT8_MSB    : integer := 26;
+    constant REG_TRIG_BITSLIP_CNT_VFAT8_LSB     : integer := 24;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT9_ADDR    : std_logic_vector(7 downto 0) := x"96";
+    constant REG_TRIG_BITSLIP_CNT_VFAT9_MSB    : integer := 29;
+    constant REG_TRIG_BITSLIP_CNT_VFAT9_LSB     : integer := 27;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT10_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT10_MSB    : integer := 2;
+    constant REG_TRIG_BITSLIP_CNT_VFAT10_LSB     : integer := 0;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT11_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT11_MSB    : integer := 5;
+    constant REG_TRIG_BITSLIP_CNT_VFAT11_LSB     : integer := 3;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT12_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT12_MSB    : integer := 8;
+    constant REG_TRIG_BITSLIP_CNT_VFAT12_LSB     : integer := 6;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT13_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT13_MSB    : integer := 11;
+    constant REG_TRIG_BITSLIP_CNT_VFAT13_LSB     : integer := 9;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT14_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT14_MSB    : integer := 14;
+    constant REG_TRIG_BITSLIP_CNT_VFAT14_LSB     : integer := 12;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT15_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT15_MSB    : integer := 17;
+    constant REG_TRIG_BITSLIP_CNT_VFAT15_LSB     : integer := 15;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT16_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT16_MSB    : integer := 20;
+    constant REG_TRIG_BITSLIP_CNT_VFAT16_LSB     : integer := 18;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT17_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT17_MSB    : integer := 23;
+    constant REG_TRIG_BITSLIP_CNT_VFAT17_LSB     : integer := 21;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT18_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT18_MSB    : integer := 26;
+    constant REG_TRIG_BITSLIP_CNT_VFAT18_LSB     : integer := 24;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT19_ADDR    : std_logic_vector(7 downto 0) := x"97";
+    constant REG_TRIG_BITSLIP_CNT_VFAT19_MSB    : integer := 29;
+    constant REG_TRIG_BITSLIP_CNT_VFAT19_LSB     : integer := 27;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT20_ADDR    : std_logic_vector(7 downto 0) := x"98";
+    constant REG_TRIG_BITSLIP_CNT_VFAT20_MSB    : integer := 2;
+    constant REG_TRIG_BITSLIP_CNT_VFAT20_LSB     : integer := 0;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT21_ADDR    : std_logic_vector(7 downto 0) := x"98";
+    constant REG_TRIG_BITSLIP_CNT_VFAT21_MSB    : integer := 5;
+    constant REG_TRIG_BITSLIP_CNT_VFAT21_LSB     : integer := 3;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT22_ADDR    : std_logic_vector(7 downto 0) := x"98";
+    constant REG_TRIG_BITSLIP_CNT_VFAT22_MSB    : integer := 8;
+    constant REG_TRIG_BITSLIP_CNT_VFAT22_LSB     : integer := 6;
+
+    constant REG_TRIG_BITSLIP_CNT_VFAT23_ADDR    : std_logic_vector(7 downto 0) := x"98";
+    constant REG_TRIG_BITSLIP_CNT_VFAT23_MSB    : integer := 11;
+    constant REG_TRIG_BITSLIP_CNT_VFAT23_LSB     : integer := 9;
 
 
     --============================================================================
@@ -1940,19 +2036,19 @@ package registers is
     constant REG_CLOCKING_NUM_REGS : integer := 1;
     constant REG_CLOCKING_ADDRESS_MSB : integer := 1;
     constant REG_CLOCKING_ADDRESS_LSB : integer := 0;
-    constant REG_CLOCKING_GBT_MMCM_LOCKED_ADDR    : std_logic_vector(1 downto 0) := "00";
-    constant REG_CLOCKING_GBT_MMCM_LOCKED_BIT    : integer := 0;
+    constant REG_CLOCKING_CORE_MMCM_LOCKED_ADDR    : std_logic_vector(1 downto 0) := "00";
+    constant REG_CLOCKING_CORE_MMCM_LOCKED_BIT    : integer := 0;
 
-    constant REG_CLOCKING_LOGIC_MMCM_LOCKED_ADDR    : std_logic_vector(1 downto 0) := "00";
-    constant REG_CLOCKING_LOGIC_MMCM_LOCKED_BIT    : integer := 1;
+    constant REG_CLOCKING_TRIGGER_MMCM_LOCKED_ADDR    : std_logic_vector(1 downto 0) := "00";
+    constant REG_CLOCKING_TRIGGER_MMCM_LOCKED_BIT    : integer := 1;
 
-    constant REG_CLOCKING_GBT_MMCM_UNLOCKED_CNT_ADDR    : std_logic_vector(1 downto 0) := "00";
-    constant REG_CLOCKING_GBT_MMCM_UNLOCKED_CNT_MSB    : integer := 23;
-    constant REG_CLOCKING_GBT_MMCM_UNLOCKED_CNT_LSB     : integer := 16;
+    constant REG_CLOCKING_CORE_MMCM_UNLOCKED_CNT_ADDR    : std_logic_vector(1 downto 0) := "00";
+    constant REG_CLOCKING_CORE_MMCM_UNLOCKED_CNT_MSB    : integer := 23;
+    constant REG_CLOCKING_CORE_MMCM_UNLOCKED_CNT_LSB     : integer := 16;
 
-    constant REG_CLOCKING_LOGIC_MMCM_UNLOCKED_CNT_ADDR    : std_logic_vector(1 downto 0) := "00";
-    constant REG_CLOCKING_LOGIC_MMCM_UNLOCKED_CNT_MSB    : integer := 31;
-    constant REG_CLOCKING_LOGIC_MMCM_UNLOCKED_CNT_LSB     : integer := 24;
+    constant REG_CLOCKING_TRIGGER_MMCM_UNLOCKED_CNT_ADDR    : std_logic_vector(1 downto 0) := "00";
+    constant REG_CLOCKING_TRIGGER_MMCM_UNLOCKED_CNT_MSB    : integer := 31;
+    constant REG_CLOCKING_TRIGGER_MMCM_UNLOCKED_CNT_LSB     : integer := 24;
 
 
     --============================================================================
@@ -1962,7 +2058,7 @@ package registers is
     -- GBTx to FPGA link
     --============================================================================
 
-    constant REG_GBT_NUM_REGS : integer := 6;
+    constant REG_GBT_NUM_REGS : integer := 7;
     constant REG_GBT_ADDRESS_MSB : integer := 3;
     constant REG_GBT_ADDRESS_LSB : integer := 0;
     constant REG_GBT_TX_CNT_RESPONSE_SENT_ADDR    : std_logic_vector(3 downto 0) := x"0";
@@ -1972,16 +2068,14 @@ package registers is
     constant REG_GBT_TX_TX_READY_ADDR    : std_logic_vector(3 downto 0) := x"1";
     constant REG_GBT_TX_TX_READY_BIT    : integer := 0;
 
-    constant REG_GBT_TX_TX_DELAY_ADDR    : std_logic_vector(3 downto 0) := x"1";
-    constant REG_GBT_TX_TX_DELAY_MSB    : integer := 8;
-    constant REG_GBT_TX_TX_DELAY_LSB     : integer := 4;
-    constant REG_GBT_TX_TX_DELAY_DEFAULT : std_logic_vector(8 downto 4) := '0' & x"0";
-
     constant REG_GBT_RX_RX_READY_ADDR    : std_logic_vector(3 downto 0) := x"4";
     constant REG_GBT_RX_RX_READY_BIT    : integer := 0;
 
     constant REG_GBT_RX_RX_VALID_ADDR    : std_logic_vector(3 downto 0) := x"4";
     constant REG_GBT_RX_RX_VALID_BIT    : integer := 1;
+
+    constant REG_GBT_RX_RX_UNSTABLE_ADDR    : std_logic_vector(3 downto 0) := x"4";
+    constant REG_GBT_RX_RX_UNSTABLE_BIT    : integer := 2;
 
     constant REG_GBT_RX_CNT_REQUEST_RECEIVED_ADDR    : std_logic_vector(3 downto 0) := x"4";
     constant REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB    : integer := 31;
@@ -2002,6 +2096,10 @@ package registers is
     constant REG_GBT_TTC_FORCE_RESYNC_ADDR    : std_logic_vector(3 downto 0) := x"7";
     constant REG_GBT_TTC_FORCE_RESYNC_MSB    : integer := 31;
     constant REG_GBT_TTC_FORCE_RESYNC_LSB     : integer := 0;
+
+    constant REG_GBT_RESET_CNT_ADDR    : std_logic_vector(3 downto 0) := x"8";
+    constant REG_GBT_RESET_CNT_MSB    : integer := 31;
+    constant REG_GBT_RESET_CNT_LSB     : integer := 0;
 
 
 end registers;

@@ -22,39 +22,37 @@ use unisim.vcomponents.all;
 
 library work;
 use work.types_pkg.all;
-
-library work;
 use work.ipbus_pkg.all;
 
 entity gbt_rx is
 generic(
     g_FRAME_COUNT_MAX : integer := 8;  -- number of frames in a request packet
     g_FRAME_WIDTH     : integer := 6;  -- number of data bits per frame
-    g_READY_COUNT_MAX : integer := 64 -- number of good consecutive frames to mark the output as ready
+    g_RDY_COUNT_MAX : integer := 64 -- number of good consecutive frames to mark the output as ready
 );
 port(
 
     -- reset
-    reset_i         : in std_logic;
+    rst_i       :  in std_logic;
 
     -- 40 MHz fabric clock
-    clock         : in std_logic;
+    clk_i         :  in std_logic;
 
     -- parallel data input from deserializer
-    data_i          : in std_logic_vector(7 downto 0);
+    data_i        :  in std_logic_vector(7 downto 0);
 
     -- decoded ttc commands
-    l1a_o           : out std_logic;
-    bc0_o           : out std_logic;
-    resync_o        : out std_logic;
+    l1a_o         :  out std_logic;
+    bc0_o         :  out std_logic;
+    resync_o      :  out std_logic;
 
     -- 49 bit output packet to fifo
-    req_en_o        : out std_logic;
-    req_data_o      : out std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
+    req_en_o      :  out std_logic;
+    req_data_o    :  out std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
 
     -- status
-    ready_o         : out std_logic;
-    error_o         : out std_logic
+    rdy_o       :  out std_logic;
+    err_o       :  out std_logic
 
 );
 end gbt_rx ;
@@ -63,99 +61,110 @@ architecture Behavioral of gbt_rx is
 
     type state_t is (ERR, SYNCING, IDLE, HEADER, START, DATA);
 
-    signal req_valid    : std_logic;
-    signal req_data_buf     : std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
+    signal req_valid         :  std_logic;
+    signal req_data_buf      :  std_logic_vector(WB_REQ_BITS-1 downto 0) := (others => '0');
 
-    signal state        : state_t := SYNCING;
+    signal state             :  state_t := SYNCING;
 
-    signal data_frame_cnt   : integer range 0 to g_FRAME_COUNT_MAX-1 := 0;
+    signal data_frame_cnt    :  integer range 0 to g_FRAME_COUNT_MAX-1 := 0;
 
-    signal ready_cnt   : integer range 0 to g_READY_COUNT_MAX-1 := 0;
-    signal ready    : std_logic;
+    signal rdy_cnt         :  integer range 0 to g_RDY_COUNT_MAX-1 := 0;
+    signal rdy             :  std_logic;
 
-    signal frame_data       : std_logic_vector (5 downto 0);
-    signal frame_data_delay : std_logic_vector (5 downto 0);
+    signal frame_data        :  std_logic_vector (5 downto 0);
+    signal frame_data_delay  :  std_logic_vector (5 downto 0);
 
-    signal char_is_data   : std_logic;
-    signal char_is_ttc    : std_logic;
-    signal char_is_header : std_logic;
-    signal not_in_table   : std_logic;
+    signal char_is_data      :  std_logic;
+    signal char_is_ttc       :  std_logic;
+    signal char_is_header    :  std_logic;
+    signal not_in_table      :  std_logic;
 
-    signal reset         : std_logic;
+    signal rst             :  std_logic;
 
-    signal last_data_frame : std_logic;
+    signal last_data_frame   :  std_logic;
 
-    signal l1a           : std_logic;
-    signal bc0           : std_logic;
-    signal idle_rx       : std_logic;
-    signal resync        : std_logic;
+    signal l1a               :  std_logic;
+    signal bc0               :  std_logic;
+    signal idle_rx           :  std_logic;
+    signal resync            :  std_logic;
 
 begin
 
-    -- fanout reset tree
+    ----------------------------------------------------------------------------------------------------
+    -- Fanout Reset
+    ----------------------------------------------------------------------------------------------------
 
-    process (clock) begin
-        if (rising_edge(clock)) then
-            reset <= reset_i;
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
+            rst <= rst_i;
         end if;
     end process;
 
-    --== ERROR ==--
+    ----------------------------------------------------------------------------------------------------
+    -- err
+    ----------------------------------------------------------------------------------------------------
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
+        if (rising_edge(clk_i)) then
 
-            if (ready='1') then
-                if  (STATE=ERR)   then error_o <= '1';
-                else                   error_o <= '0';
+            if (rdy='1') then
+                if  (STATE=ERR)   then err_o <= '1';
+                else                   err_o <= '0';
                 end if;
             else
-                if  (idle_rx = '1' or char_is_ttc='1' ) then error_o <= '0';
-                else                                         error_o <= '1';
+                if  (idle_rx = '1' or char_is_ttc='1' ) then err_o <= '0';
+                else                                         err_o <= '1';
                 end if;
             end if;
 
         end if;
     end process;
 
-    --== TTC ==--
+    ----------------------------------------------------------------------------------------------------
+    -- TTC Outputs
+    ----------------------------------------------------------------------------------------------------
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
-            if (reset = '1') then
+        if (rising_edge(clk_i)) then
+            if (rdy='0' or rst = '1') then
                 l1a_o    <= '0';
                 resync_o <= '0';
                 bc0_o    <= '0';
             else
-                l1a_o         <= ready and l1a;
-                resync_o      <= ready and resync;
-                bc0_o         <= ready and bc0;
+                l1a_o         <= l1a;
+                resync_o      <= resync;
+                bc0_o         <= bc0;
             end if;
         end if;
     end process;
 
-    process (clock) begin
-        if (rising_edge(clock)) then
+    ----------------------------------------------------------------------------------------------------
+    -- Ready Counter
+    ----------------------------------------------------------------------------------------------------
 
-            if (reset = '1' or state=ERR) then
-                ready_cnt <= 0;
-            elsif ((idle_rx = '1' or char_is_ttc='1') and (ready_cnt < g_READY_COUNT_MAX-1)) then
-                ready_cnt <= ready_cnt + 1;
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
+            if (rst = '1' or state=ERR) then
+                rdy_cnt <= 0;
+            elsif ((idle_rx = '1' or char_is_ttc='1') and (rdy_cnt < g_rdy_COUNT_MAX-1)) then
+                rdy_cnt <= rdy_cnt + 1;
             end if;
 
         end if;
     end process;
 
-    ready <= '1' when (ready_cnt = g_READY_COUNT_MAX-1) else '0';
+    rdy <= '1' when (rdy_cnt = g_RDY_COUNT_MAX-1) else '0';
 
-    ready_o <= ready;
+    rdy_o <= rdy;
 
+    ----------------------------------------------------------------------------------------------------
     -- 8b to 6b conversion
+    ----------------------------------------------------------------------------------------------------
     eightbit_sixbit_inst : entity work.eightbit_sixbit
     port map (
-        clock          => clock,
+        clock          => clk_i,
         eightbit       => data_i,
         sixbit         => frame_data,
         not_in_table   => not_in_table,
@@ -168,21 +177,30 @@ begin
         idle           => idle_rx
     );
 
-    process (clock) begin
-        if (rising_edge(clock)) then
-            -- only latch if char_is_data so that we can "pause" the sequencer if a ttc command is received
-            -- during a packet
+    ----------------------------------------------------------------------------------------------------
+    -- Frame Data Latch
+    ----------------------------------------------------------------------------------------------------
+    -- only latch if char_is_data so that we can "pause" the sequencer if a ttc command is received
+    -- during a packet
+    ----------------------------------------------------------------------------------------------------
+
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
             if    (char_is_data='1') then frame_data_delay <= frame_data;
             else                          frame_data_delay <= frame_data_delay;
             end if;
         end if;
     end process;
 
-    process(clock)
-    begin
-        if (rising_edge(clock)) then
+    ----------------------------------------------------------------------------------------------------
+    -- RX State FSM
+    ----------------------------------------------------------------------------------------------------
 
-            if (reset = '1') then
+    process(clk_i)
+    begin
+        if (rising_edge(clk_i)) then
+
+            if (rst = '1') then
                 state <= SYNCING;
                 data_frame_cnt <= 0;
             elsif (not_in_table='1') then
@@ -192,7 +210,6 @@ begin
                 case state is
 
                     when ERR =>
-
                         if (not_in_table='0') then
                             state <= SYNCING;
                             data_frame_cnt <= 0;
@@ -200,7 +217,7 @@ begin
 
                     when SYNCING =>
 
-                        if (ready='1') then
+                        if (rdy='1') then
                             state <= IDLE;
                         end if;
                         data_frame_cnt <= 0;
@@ -259,11 +276,13 @@ begin
         end if;
     end process;
 
-    --== REQUEST ==--
+    ----------------------------------------------------------------------------------------------------
+    -- RX Packet FSM
+    ----------------------------------------------------------------------------------------------------
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
+        if (rising_edge(clk_i)) then
 
             -- latch request after data frame 4
             if (state=DATA and ((g_FRAME_COUNT_MAX-1) = data_frame_cnt) and char_is_ttc='0') then
@@ -279,7 +298,7 @@ begin
                     req_en_o   <= '0';
             end if;
 
-            if (reset = '1' or ready='0') then
+            if (rst = '1' or rdy='0') then
                 req_valid  <= '0';
             else
                 case state is

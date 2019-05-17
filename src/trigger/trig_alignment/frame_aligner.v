@@ -22,12 +22,12 @@ module frame_aligner (
   input [FRAME_SIZE-1:0] start_of_frame,
 
   input reset_i,
-  input mask,
 
   input clock,
-  input clock4x,
 
   input [11:0] aligned_count_to_ready,
+
+  output reg [2:0] bitslip_cnt_o,
 
   output reg sot_unstable,
   output reg sot_is_aligned
@@ -74,7 +74,7 @@ module frame_aligner (
 
   bitslip data_bitslip (
     .fabric_clk   (clock),
-    .reset        (1'b0), //(reset || mask || ~sot_is_aligned),
+    .reset        (1'b0),
     .bitslip_cnt  (bitslip_cnt),
     .din          (sbits_i[8*(I+1)-1 : 8*I]),
     .dout         (sbits_o[8*(I+1)-1 : 8*I])
@@ -114,6 +114,9 @@ module frame_aligner (
   // I have no idea why
 
   always @(posedge clock) begin
+
+    bitslip_cnt_o <= bitslip_cnt;
+
     case (start_of_frame_reg)
       8'b00000001: begin bitslip_cnt <= 3'd1; sot_good <= 1'b1; end
       8'b00000010: begin bitslip_cnt <= 3'd2; sot_good <= 1'b1; end

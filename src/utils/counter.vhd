@@ -23,8 +23,8 @@ entity counter is
         g_INCREMENT_STEP : integer := 1
     );
     port(
-        ref_clk_i : in  std_logic;
-        reset_i   : in  std_logic;
+        clk_i : in  std_logic;
+        rst_i   : in  std_logic;
         en_i      : in  std_logic;
         count_o   : out std_logic_vector(g_COUNTER_WIDTH - 1 downto 0)
     );
@@ -37,10 +37,10 @@ architecture counter_arch of counter is
 
 begin
 
-    process(ref_clk_i)
+    process(clk_i)
     begin
-        if rising_edge(ref_clk_i) then
-            if reset_i = '1' then
+        if rising_edge(clk_i) then
+            if rst_i = '1' then
                 count_o <= (others => '0');
                 count <= (others => '0');
             else

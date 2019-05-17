@@ -2,17 +2,15 @@
 -- CMS Muon Endcap
 -- GEM Collaboration
 -- Optohybrid v3 Firmware -- Top Logic
--- T. Lenzi, E. Juska, A. Peck
+-- A. Peck, E. Juska, T. Lenzi
 ----------------------------------------------------------------------------------
 -- 2017/07/21 -- Initial port to version 3 electronics
 -- 2017/07/22 -- Additional MMCM added to monitor and dejitter the eport clock
 -- 2017/07/25 -- Restructure top level module to improve organization
 -- 2018/04/18 -- Mods for for OH lite compatibility
+-- 2019/05/09 -- Implementation of new gated clocking scheme
 ----------------------------------------------------------------------------------
--- TODO: Replace redundant gbt rx clocks with standard logic clocks, keep only tx
---       clock on its own mmcm
---       Remove obsolete CDC circuit
--- TODO: Replace GBT tx 320MHz with 160MHz ddr ?
+-- TODO: triplicate IPBus control
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -24,20 +22,17 @@ use work.types_pkg.all;
 use work.ipbus_pkg.all;
 use work.trig_pkg.all;
 use work.param_pkg.all;
+
 library unisim;
 use unisim.vcomponents.all;
-
 
 entity optohybrid_top is
 port(
 
     --== Clocking ==--
 
-    logic_clock_p : in std_logic;
-    logic_clock_n : in std_logic;
-
-    elink_clock_p : in std_logic;
-    elink_clock_n : in std_logic;
+    clock_p : in std_logic;
+    clock_n : in std_logic;
 
     --== Elinks ==--
 
@@ -91,34 +86,27 @@ architecture Behavioral of optohybrid_top is
 
     --== SBit cluster packer ==--
 
-    signal sbit_overflow : std_logic;
     signal cluster_count : std_logic_vector     (10  downto 0);
     signal active_vfats  : std_logic_vector     (MXVFATS-1 downto 0);
 
     --== Global signals ==--
 
     signal mmcms_locked     : std_logic;
-    signal logic_mmcm_locked : std_logic;
+    signal trigger_mmcm_locked : std_logic;
     signal logic_mmcm_reset : std_logic;
-    signal eprt_mmcm_locked : std_logic;
+    signal core_mmcm_locked : std_logic;
 
-    signal gbt_clk40      : std_logic;
-    signal gbt_clk80      : std_logic;
-    signal gbt_clk160_0   : std_logic;
-    signal gbt_clk160_90  : std_logic;
-    signal gbt_clk160_180 : std_logic;
-    signal gbt_clk320     : std_logic;
+    signal clk_1x    : std_logic;
+    signal clk_2x    : std_logic;
+    signal clk_4x    : std_logic;
+    signal clk_4x_90 : std_logic;
+    signal clk_5x    : std_logic;
 
-    signal clk_1x  : std_logic;
-    signal clk_4x  : std_logic;
-    signal clk_1x_trigger           : std_logic;
-    signal clk_2x_trigger           : std_logic;
-    signal clk_4x_trigger           : std_logic;
-    signal clk_5x_trigger           : std_logic;
-    signal clk_4x_90_trigger        : std_logic;
-
-    signal delay_refclk     : std_logic;
-    signal delay_refclk_reset : std_logic;
+    signal clk_1x_trigger    : std_logic;
+    signal clk_2x_trigger    : std_logic;
+    signal clk_4x_trigger    : std_logic;
+    signal clk_5x_trigger    : std_logic;
+    signal clk_4x_90_trigger : std_logic;
 
     signal vtrx_mabs        : std_logic_vector (1 downto 0);
 
@@ -127,8 +115,7 @@ architecture Behavioral of optohybrid_top is
     signal gbt_rxvalid      : std_logic_vector (MXREADY-1 downto 0);
     signal gbt_rxready      : std_logic_vector (MXREADY-1 downto 0);
 
-    signal gbt_link_ready        : std_logic;
-    signal gbt_link_error       : std_logic;
+    signal gbt_link_rdy        : std_logic;
     signal gbt_request_received : std_logic;
 
     signal mgts_ready       : std_logic;
@@ -170,6 +157,7 @@ architecture Behavioral of optohybrid_top is
 
     signal ext_sbits : std_logic_vector (7 downto 0);
     signal soft_reset : std_logic;
+    signal reset_init : std_logic;
 
     signal led : std_logic_vector (15 downto 0);
 
@@ -180,18 +168,19 @@ architecture Behavioral of optohybrid_top is
 
     -- END: Station Specific Signals DO NOT EDIT --
 
+    attribute IODELAY_GROUP: string;
+    attribute IODELAY_GROUP of delayctrl : label is "IODELAY_GROUP";
+
 begin
 
-    -- internal wiring
 
-    gbt_request_received <= ipb_mosi_gbt.ipb_strobe;
-
-
-    --=============--
-    --== Common  ==--
-    --=============--
+    --------------------------------------------------------------------------------------------------------------------
+    -- Wiring
+    --------------------------------------------------------------------------------------------------------------------
 
     led_o (MXLED-1 downto 0) <= led (MXLED-1 downto 0);
+
+    gbt_request_received <= ipb_mosi_gbt.ipb_strobe;
 
     gbt_rxready   <= gbt_rxready_i;
     gbt_rxvalid   <= gbt_rxvalid_i;
@@ -205,58 +194,55 @@ begin
     ext_sbits_o  <= ext_sbits;
     -- END: Station Specific IO DO NOT EDIT --
 
-    --==============--
-    --== Clocking ==--
-    --==============--
+    --------------------------------------------------------------------------------------------------------------------
+    -- Clocking
+    --------------------------------------------------------------------------------------------------------------------
 
     clocking : entity work.clocking
     port map(
 
-        logic_clock_p        => logic_clock_p, -- phase shiftable 40MHz ttc clocks
-        logic_clock_n        => logic_clock_n, --
+        -- clock input from pins
+        clock_i_p       => clock_p, -- phase shiftable 40MHz ttc clocks
+        clock_i_n       => clock_n, --
 
-        elink_clock_p        => elink_clock_p, -- phase shiftable 40MHz ttc clocks
-        elink_clock_n        => elink_clock_n, --
+        -- ipbus
+        ipb_mosi_i          => ipb_mosi_slaves (IPB_SLAVE.CLOCKING),
+        ipb_miso_o          => ipb_miso_slaves (IPB_SLAVE.CLOCKING),
+        ipb_reset_i         => core_reset,
 
-        ipb_mosi_i           => ipb_mosi_slaves (IPB_SLAVE.CLOCKING),
-        ipb_miso_o           => ipb_miso_slaves (IPB_SLAVE.CLOCKING),
-        ipb_reset_i          => core_reset,
+        -- mmcm locked outputs
+        mmcms_locked_o      => mmcms_locked,
+        core_mmcm_locked_o   => core_mmcm_locked,
+        trigger_mmcm_locked_o => trigger_mmcm_locked,
 
-        cnt_snap             => cnt_snap,
+        -- gbt communication clocks
 
-        mmcms_locked_o       => mmcms_locked,
+        clock_enable_i      => mgts_ready,
 
-        eprt_mmcm_reset_i    => '0',
-        dskw_mmcm_reset_i    => '0',
+        -- logic clocks
+        clk_1x_o            => clk_1x,
+        clk_2x_o            => clk_2x,
+        clk_4x_o            => clk_4x,
+        clk_4x_90_o         => clk_4x_90,  -- 160  MHz e-port aligned GBT clock
+        clk_5x_o            => clk_5x,
 
-        eprt_mmcm_locked_o   => eprt_mmcm_locked,
-        dskw_mmcm_locked_o   => logic_mmcm_locked,
-
-        gbt_clk40_o          => gbt_clk40,      -- 40  MHz e-port aligned GBT clock
-        gbt_clk80_o          => gbt_clk80,      -- 80  MHz e-port aligned GBT clock
-        gbt_clk320_o         => gbt_clk320,     -- 320  MHz e-port aligned GBT clock
-        gbt_clk160_0_o       => gbt_clk160_0,   -- 160  MHz e-port aligned GBT clock
-        gbt_clk160_90_o      => gbt_clk160_90,  -- 160  MHz e-port aligned GBT clock
-        gbt_clk160_180_o     => gbt_clk160_180, -- 160  MHz e-port aligned GBT clock
-
-        clock_enable_i       => mgts_ready,
-
-        clk_1x_o             => clk_1x_trigger, -- phase shiftable logic clocks
-        clk_2x_o             => clk_2x_trigger,
-        clk_4x_o             => clk_4x_trigger,
-        clk_1x_alwayson_o    => clk_1x,
-        clk_4x_alwayson_o    => clk_4x,
-        clk_5x_o             => clk_5x_trigger,
-        clk_4x_90_o          => clk_4x_90_trigger,
-
-        delay_refclk_reset_o => delay_refclk_reset,
-        delay_refclk_o       => delay_refclk
+        -- trigger (stoppable) clocks
+        clk_1x_gated_o      => clk_1x_trigger, -- phase shiftable logic clocks
+        clk_2x_gated_o      => clk_2x_trigger,
+        clk_4x_gated_o      => clk_4x_trigger,
+        clk_5x_gated_o      => clk_5x_trigger,
+        clk_4x_90_gated_o   => clk_4x_90_trigger
     );
 
-    reset_ctl : entity work.reset
+    --------------------------------------------------------------------------------------------------------------------
+    -- Reset
+    --------------------------------------------------------------------------------------------------------------------
+
+    reset_init <= soft_reset or (not mgts_ready);
+    reset_ctl : entity work.reset_tmr
     port map (
         clock_i        => clk_1x,
-        soft_reset     => soft_reset or (not mgts_ready),
+        soft_reset     => reset_init,
         mmcms_locked_i => mmcms_locked,
         gbt_rxready_i  => gbt_rxready(0),
         gbt_rxvalid_i  => gbt_rxvalid(0),
@@ -265,65 +251,61 @@ begin
         reset_o        => trigger_reset
     );
 
-    --=========--
-    --== GBT ==--
-    --=========--
+    --------------------------------------------------------------------------------------------------------------------
+    -- GBT Communication
+    --------------------------------------------------------------------------------------------------------------------
 
     gbt : entity work.gbt
     port map(
 
         -- reset
-        reset_i => core_reset,
 
-        -- GBT
-
-        gbt_rxready_i => gbt_rxready(0),
-        gbt_rxvalid_i => gbt_rxvalid(0),
-        gbt_txready_i => gbt_txready(0),
+        rst_i              => core_reset,
 
         -- input clocks
 
-        gbt_clk40      => gbt_clk40,     -- 40 MHz frame clock
-        gbt_clk80      => gbt_clk80,     -- 80  MHz e-port aligned GBT clock
-        gbt_clk160_0   => gbt_clk160_0,  --
-        gbt_clk160_90  => gbt_clk160_90, --
-        gbt_clk160_180 => gbt_clk160_180, --
-        gbt_clk320     => gbt_clk320,    -- 320 MHz phase shiftable frame clock from GBT
+        clk_1x             => clk_1x,     -- 40 MHz frame clock
+        clk_2x             => clk_2x,     -- 80  MHz e-port aligned GBT clock
+        clk_4x             => clk_4x,  --
+        clk_4x_90          => clk_4x_90, --
 
-        clock_i => clk_1x, -- 320 MHz sampling clock
+        -- GBT
+
+        gbt_rxready_i      => gbt_rxready(0),
+        gbt_rxvalid_i      => gbt_rxvalid(0),
+        gbt_txready_i      => gbt_txready(0),
 
         -- elinks
-        elink_i_p  =>  elink_i_p,
-        elink_i_n  =>  elink_i_n,
+        elink_i_p          => elink_i_p,
+        elink_i_n          => elink_i_n,
 
-        elink_o_p  =>  elink_o_p,
-        elink_o_n  =>  elink_o_n,
+        elink_o_p          => elink_o_p,
+        elink_o_n          => elink_o_n,
 
-        gbt_link_error_o => gbt_link_error,
-        gbt_link_ready_o => gbt_link_ready,
+        gbt_link_rdy_o     => gbt_link_rdy,
 
         -- wishbone master
-        ipb_mosi_o    => ipb_mosi_gbt,
-        ipb_miso_i    => ipb_miso_gbt,
+        ipb_mosi_o         => ipb_mosi_gbt,
+        ipb_miso_i         => ipb_miso_gbt,
 
         -- wishbone slave
 
-        ipb_mosi_i      => ipb_mosi_slaves (IPB_SLAVE.GBT),
-        ipb_miso_o      => ipb_miso_slaves (IPB_SLAVE.GBT),
-        ipb_reset_i     => core_reset,
+        ipb_mosi_i         => ipb_mosi_slaves (IPB_SLAVE.GBT),
+        ipb_miso_o         => ipb_miso_slaves (IPB_SLAVE.GBT),
+        ipb_rst_i          => core_reset,
 
-        cnt_snap => cnt_snap,
+        cnt_snap           => cnt_snap,
 
         -- decoded TTC
-        resync_o        => ttc_resync,
-        l1a_o           => ttc_l1a,
-        bc0_o           => ttc_bc0
+        resync_o           => ttc_resync,
+        l1a_o              => ttc_l1a,
+        bc0_o              => ttc_bc0
 
     );
 
-    --=====================--
-    --== Wishbone switch ==--
-    --=====================--
+    --------------------------------------------------------------------------------------------------------------------
+    -- Wishbone switch
+    --------------------------------------------------------------------------------------------------------------------
 
     -- This module is the Wishbone switch which redirects requests from the masters to the slaves.
 
@@ -332,192 +314,176 @@ begin
 
     ipb_switch_inst : entity work.ipb_switch
     port map(
-        clock_i => clk_1x,
-        reset_i => core_reset,
+        clock_i              => clk_1x,
+        reset_i              => core_reset,
 
         -- connect to master
-        mosi_masters => ipb_mosi_masters,
-        miso_masters => ipb_miso_masters,
+        mosi_masters         => ipb_mosi_masters,
+        miso_masters         => ipb_miso_masters,
 
         -- connect to slaves
-        mosi_slaves => ipb_mosi_slaves,
-        miso_slaves => ipb_miso_slaves
+        mosi_slaves          => ipb_mosi_slaves,
+        miso_slaves          => ipb_miso_slaves
     );
 
-    --====================--
-    --== System Monitor ==--
-    --====================--
+    --------------------------------------------------------------------------------------------------------------------
+    -- XADC Instantiation
+    --------------------------------------------------------------------------------------------------------------------
 
     adc_inst : entity work.adc port map(
-        clock_i         => clk_1x,
-        reset_i         => core_reset,
+        clock_i     => clk_1x,
+        reset_i     => core_reset,
 
-        cnt_snap => cnt_snap,
+        cnt_snap    => cnt_snap,
 
-        ipb_mosi_i      => ipb_mosi_slaves (IPB_SLAVE.ADC),
-        ipb_miso_o      => ipb_miso_slaves (IPB_SLAVE.ADC),
-        ipb_reset_i     => core_reset,
-        ipb_clk_i       => clk_1x,
+        ipb_mosi_i  => ipb_mosi_slaves (IPB_SLAVE.ADC),
+        ipb_miso_o  => ipb_miso_slaves (IPB_SLAVE.ADC),
+        ipb_reset_i => core_reset,
+        ipb_clk_i   => clk_1x,
 
-        adc_vp          => adc_vp,
-        adc_vn          => adc_vn
+        adc_vp      => adc_vp,
+        adc_vn      => adc_vn
     );
 
-    --=============--
-    --== Control ==--
-    --=============--
+    --------------------------------------------------------------------------------------------------------------------
+    -- Control
+    --------------------------------------------------------------------------------------------------------------------
 
     control : entity work.control
     port map (
 
-        mgts_ready   => mgts_ready,
-        pll_lock     => pll_lock,
-        txfsm_done   => txfsm_done,
+        mgts_ready             => mgts_ready,
+        pll_lock               => pll_lock,
+        txfsm_done             => txfsm_done,
 
         --== TTC ==--
 
-        clock_i                =>   clk_1x,
-        gbt_clock_i            =>   gbt_clk40,
-        reset_i                =>   core_reset,
+        clock_i                => clk_1x,
+        gbt_clock_i            => clk_1x,
+        reset_i                => core_reset,
 
-        ttc_l1a                =>   ttc_l1a,
-        ttc_bc0                =>   ttc_bc0,
-        ttc_resync             =>   ttc_resync,
+        ttc_l1a                => ttc_l1a,
+        ttc_bc0                => ttc_bc0,
+        ttc_resync             => ttc_resync,
 
-        ipb_mosi_i             =>   ipb_mosi_slaves (IPB_SLAVE.CONTROL),
-        ipb_miso_o             =>   ipb_miso_slaves (IPB_SLAVE.CONTROL),
-
-        -------------------
-        -- status inputs --
-        -------------------
+        ipb_mosi_i             => ipb_mosi_slaves (IPB_SLAVE.CONTROL),
+        ipb_miso_o             => ipb_miso_slaves (IPB_SLAVE.CONTROL),
 
         -- MMCM
-        mmcms_locked_i     => mmcms_locked,
-        dskw_mmcm_locked_i => logic_mmcm_locked,
-        eprt_mmcm_locked_i => eprt_mmcm_locked,
+        mmcms_locked_i         => mmcms_locked,
+        trigger_mmcm_locked_i  => trigger_mmcm_locked,
+        core_mmcm_locked_i     => core_mmcm_locked,
 
         -- GBT
 
-        gbt_link_ready_i => gbt_link_ready,
+        gbt_link_ready_i       => gbt_link_rdy,
 
-        gbt_rxready_i => gbt_rxready(0),
-        gbt_rxvalid_i => gbt_rxvalid(0),
-        gbt_txready_i => gbt_txready(0),
+        gbt_rxready_i          => gbt_rxready(0),
+        gbt_rxvalid_i          => gbt_rxvalid(0),
+        gbt_txready_i          => gbt_txready(0),
 
         gbt_request_received_i => gbt_request_received,
 
         -- Trigger
 
-        active_vfats_i  => active_vfats,
-        sbit_overflow_i => sbit_overflow,
-        cluster_count_i => cluster_count,
+        active_vfats_i         => active_vfats,
+        cluster_count_i        => cluster_count,
 
-        -- GBT
-        gbt_link_error_i => gbt_link_error,
+        -- TTC
 
-        -- Analog input
-        adc_vp          => adc_vp,
-        adc_vn          => adc_vn,
+        bxn_counter_o          => bxn_counter,
 
-        ---------
-        -- TTC --
-        ---------
+        trig_stop_o            => trig_stop,
 
-        bxn_counter_o => bxn_counter,
-
-        trig_stop_o   => trig_stop,
-
-        --------------------
-        -- config outputs --
-        --------------------
+        -- config outputs
 
         -- VFAT
-        vfat_reset_o       => ctrl_reset_vfats,
-        ext_sbits_o        => ext_sbits,
+        vfat_reset_o           => ctrl_reset_vfats,
+        ext_sbits_o            => ext_sbits,
 
         -- LEDs
-        led_o => led,
+        led_o                  => led,
 
-        soft_reset_o           =>   soft_reset,
+        soft_reset_o           => soft_reset,
 
-        cnt_snap_o => cnt_snap
+        cnt_snap_o             => cnt_snap,
+
+        sump                   => open
 
     );
 
-    --==================--
-    --== Trigger Data ==--
-    --==================--
+    --------------------------------------------------------------------------------------------------------------------
+    -- Trigger: S-bit Deserialization, Cluster building, and trigger links
+    --------------------------------------------------------------------------------------------------------------------
 
     trigger : entity work.trigger
     port map (
 
         -- wishbone
 
-        ipb_mosi_i => ipb_mosi_slaves(IPB_SLAVE.TRIG),
-        ipb_miso_o => ipb_miso_slaves(IPB_SLAVE.TRIG),
+        ipb_mosi_i            => ipb_mosi_slaves(IPB_SLAVE.TRIG),
+        ipb_miso_o            => ipb_miso_slaves(IPB_SLAVE.TRIG),
 
-        mgts_ready   => mgts_ready,
-        pll_lock_o   => pll_lock,
-        txfsm_done_o => txfsm_done,
+        mgts_ready            => mgts_ready,
+        pll_lock_o            => pll_lock,
+        txfsm_done_o          => txfsm_done,
 
         -- reset
-        trigger_reset_i => trigger_reset,
-        core_reset_i    => core_reset,
-        cnt_snap        => cnt_snap,
-        ttc_resync      => ttc_resync,
+        trigger_reset_i       => trigger_reset,
+        core_reset_i          => core_reset,
+        cnt_snap              => cnt_snap,
+        ttc_resync            => ttc_resync,
 
         -- clocks
-        mgt_clk_p => mgt_clk_p_i,
-        mgt_clk_n => mgt_clk_n_i,
+        mgt_clk_p             => mgt_clk_p_i,
+        mgt_clk_n             => mgt_clk_n_i,
 
-        logic_mmcm_lock_i => logic_mmcm_locked,
-        logic_mmcm_reset_o => logic_mmcm_reset,
+        clk_40_sbit           => clk_1x_trigger,
+        clk_80_sbit           => clk_2x_trigger,
+        clk_160_sbit          => clk_4x_trigger,
+        clk_200_sbit          => clk_5x_trigger,
+        clk_160_90_sbit       => clk_4x_90_trigger,
 
-        clk_40_sbit     => clk_1x_trigger,
-        clk_80_sbit     => clk_2x_trigger,
-        clk_160_sbit    => clk_4x_trigger,
-        clk_200_sbit    => clk_5x_trigger,
-        clk_160_90_sbit => clk_4x_90_trigger,
-
-        clk_40      => clk_1x,
-        clk_160     => clk_4x,
+        clk_40                => clk_1x,
+        clk_160               => clk_4x,
 
         -- mgt pairs
-        mgt_tx_p => mgt_tx_p_o,
-        mgt_tx_n => mgt_tx_n_o,
+        mgt_tx_p              => mgt_tx_p_o,
+        mgt_tx_n              => mgt_tx_n_o,
 
         -- config
-        cluster_count_o    => cluster_count,
-        overflow_o         => sbit_overflow,
-        bxn_counter_i      => bxn_counter,
-        ttc_bx0_i          => ttc_bc0,
-        ttc_l1a_i          => ttc_l1a,
+        cluster_count_o       => cluster_count,
+        bxn_counter_i         => bxn_counter,
+        ttc_bx0_i             => ttc_bc0,
+        ttc_l1a_i             => ttc_l1a,
 
         -- sbit_ors
 
-        active_vfats_o   => active_vfats,
+        active_vfats_o        => active_vfats,
 
         -- trig stop from fmm
 
-        trig_stop_i     => trig_stop,
+        trig_stop_i           => trig_stop,
 
         -- sbits follow
 
-        vfat_sbits_p    => vfat_sbits_p,
-        vfat_sbits_n    => vfat_sbits_n,
+        vfat_sbits_p          => vfat_sbits_p,
+        vfat_sbits_n          => vfat_sbits_n,
 
-        vfat_sot_p    => vfat_sot_p,
-        vfat_sot_n    => vfat_sot_n
+        vfat_sot_p            => vfat_sot_p,
+        vfat_sot_n            => vfat_sot_n
 
     );
 
+    --------------------------------------------------------------------------------------------------------------------
+    -- IODELAY IDELAYCTRL
+    --------------------------------------------------------------------------------------------------------------------
 
--- IDELAYCTRL is needed for calibration
     delayctrl : IDELAYCTRL
     port map (
         RDY    => open,
-        REFCLK => delay_refclk,
-        RST    => delay_refclk_reset
+        REFCLK => clk_5x,
+        RST    => not (trigger_mmcm_locked)
     );
 
 end Behavioral;

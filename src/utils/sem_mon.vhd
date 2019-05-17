@@ -4,10 +4,12 @@
 -- Optohybrid v3 Firmware -- SEM
 ----------------------------------------------------------------------------------
 -- 2018/04/18 -- Add Artix-7 support
+-- 2019/05/09 -- Sump unused outputs
 ----------------------------------------------------------------------------------
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 
 library unisim;
 use unisim.vcomponents.all;
@@ -18,14 +20,18 @@ use work.param_pkg.all;
 entity sem_mon is
 port(
     clk_i               : in std_logic;
+
+    correction_o        : out std_logic;
+    classification_o    : out std_logic;
+    uncorrectable_o     : out std_logic;
+
     heartbeat_o         : out std_logic;
     initialization_o    : out std_logic;
     observation_o       : out std_logic;
-    correction_o        : out std_logic;
-    classification_o    : out std_logic;
     injection_o         : out std_logic;
     essential_o         : out std_logic;
-    uncorrectable_o     : out std_logic
+
+    sump                : out std_logic
 );
 end sem_mon;
 
@@ -117,7 +123,12 @@ architecture behavioral of sem_mon is
     signal icap_csb                 : std_logic;
     signal icap_rdwrb               : std_logic;
 
+
+    signal sump_vector : std_logic_vector (10 downto 0);
+
 begin
+
+    sump <= or_reduce(sump_vector);
 
     --------------------------------------------------------------------------------------------------------------------
     -- Virtex-6
@@ -134,11 +145,11 @@ begin
             status_injection        => injection_o,
             status_essential        => essential_o,
             status_uncorrectable    => uncorrectable_o,
-            monitor_txdata          => open,
-            monitor_txwrite         => open,
+            monitor_txdata          => sump_vector(7 downto 0),
+            monitor_txwrite         => sump_vector(8),
             monitor_txfull          => '0',
             monitor_rxdata          => (others => '0'),
-            monitor_rxread          => open,
+            monitor_rxread          => sump_vector(9),
             monitor_rxempty         => '1',
             fecc_crcerr             => fecc_crcerr,
             fecc_eccerr             => fecc_eccerr,
@@ -154,7 +165,7 @@ begin
             icap_csb                => icap_csb,
             icap_rdwrb              => icap_rdwrb,
             icap_clk                => clk_i,
-            icap_request            => open,
+            icap_request            => sump_vector(10),
             icap_grant              => '1'
         );
 
@@ -217,11 +228,11 @@ begin
                  status_injection      => injection_o,
                  status_essential      => essential_o,
                  status_uncorrectable  => uncorrectable_o,
-                 monitor_txdata        => open,
-                 monitor_txwrite       => open,
+                 monitor_txdata        => sump_vector(7 downto 0),
+                 monitor_txwrite       => sump_vector(8),
                  monitor_txfull        => '0',
                  monitor_rxdata        => (others => '0'),
-                 monitor_rxread        => open,
+                 monitor_rxread        => sump_vector(9),
                  monitor_rxempty       => '1',
                  inject_strobe         => '0',
                  inject_address        => (others => '0'),
@@ -230,7 +241,7 @@ begin
                  icap_rdwrb            => icap_rdwrb,
                  icap_i                => icap_i,
                  icap_clk              => clk_i,
-                 icap_request          => open,
+                 icap_request          => sump_vector(10),
                  icap_grant            => '1',
                  fecc_crcerr           => fecc_crcerr,
                  fecc_eccerr           => fecc_eccerr,

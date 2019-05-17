@@ -10,6 +10,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 
 library work;
 use work.types_pkg.all;
@@ -20,20 +21,22 @@ use work.registers.all;
 entity adc is
 port(
 
-    clock_i       : in std_logic;
+    clock_i         : in std_logic;
     reset_i         : in std_logic;
 
     -- IPbus
-    ipb_reset_i       : in  std_logic;
-    ipb_clk_i         : in  std_logic;
-    ipb_mosi_i        : in  ipb_wbus;
-    ipb_miso_o        : out ipb_rbus;
+    ipb_reset_i     : in  std_logic;
+    ipb_clk_i       : in  std_logic;
+    ipb_mosi_i      : in  ipb_wbus;
+    ipb_miso_o      : out ipb_rbus;
 
     -- Analog input
-    adc_vp         : in  std_logic;
-    adc_vn         : in  std_logic;
+    adc_vp          : in  std_logic;
+    adc_vn          : in  std_logic;
 
-    cnt_snap : in std_logic
+    cnt_snap        : in std_logic;
+
+    sump            : out std_logic
 
 );
 end adc;
@@ -112,6 +115,7 @@ architecture Behavioral of adc is
     signal regs_write_arr       : t_std32_array(REG_ADC_NUM_REGS - 1 downto 0) := (others => (others => '0'));
     signal regs_addresses       : t_std32_array(REG_ADC_NUM_REGS - 1 downto 0) := (others => (others => '0'));
     signal regs_defaults        : t_std32_array(REG_ADC_NUM_REGS - 1 downto 0) := (others => (others => '0'));
+    signal regs_write_arr_sump  : std_logic_vector(REG_ADC_NUM_REGS - 1 downto 0);
     signal regs_read_pulse_arr  : std_logic_vector(REG_ADC_NUM_REGS - 1 downto 0) := (others => '0');
     signal regs_write_pulse_arr : std_logic_vector(REG_ADC_NUM_REGS - 1 downto 0) := (others => '0');
     signal regs_read_ready_arr  : std_logic_vector(REG_ADC_NUM_REGS - 1 downto 0) := (others => '1');
@@ -265,11 +269,11 @@ begin
         g_COUNTER_WIDTH  => 7
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => reset,
-        en_i      => overtemp,
-        snap_i    => cnt_snap,
-        count_o   => cnt_overtemp
+        clk_i   => clock_i,
+        rst_i   => reset,
+        en_i    => overtemp,
+        snap_i  => cnt_snap,
+        count_o => cnt_overtemp
     );
 
 
@@ -278,11 +282,11 @@ begin
         g_COUNTER_WIDTH  => 7
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => reset,
-        en_i      => vccaux_alarm,
-        snap_i    => cnt_snap,
-        count_o   => cnt_vccaux_alarm
+        clk_i   => clock_i,
+        rst_i   => reset,
+        en_i    => vccaux_alarm,
+        snap_i  => cnt_snap,
+        count_o => cnt_vccaux_alarm
     );
 
 
@@ -291,11 +295,11 @@ begin
         g_COUNTER_WIDTH  => 7
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => reset,
-        en_i      => vccint_alarm,
-        snap_i    => cnt_snap,
-        count_o   => cnt_vccint_alarm
+        clk_i   => clock_i,
+        rst_i   => reset,
+        en_i    => vccint_alarm,
+        snap_i  => cnt_snap,
+        count_o => cnt_vccint_alarm
     );
 
 
@@ -313,6 +317,17 @@ begin
     regs_writable_arr(0) <= '1';
     regs_writable_arr(1) <= '1';
 
+    -- Create a sump for unused write signals
+    sump_loop : for I in 0 to (REG_ADC_NUM_REGS-1) generate
+    begin
+    regs_write_arr_sump (I) <= or_reduce (regs_write_arr(I));
+    end generate;
     --==== Registers end ============================================================================
+
+    --------------------------------------------------------------------------------------------------------------------
+    -- Sump
+    --------------------------------------------------------------------------------------------------------------------
+
+    sump <= or_reduce(regs_write_arr_sump);
 
 end Behavioral;

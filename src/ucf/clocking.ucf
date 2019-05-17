@@ -2,11 +2,8 @@
 # Clock Periods
 #######################################################################################################################
 
-NET "logic_clock_p" TNM_NET = "TN_LOGIC_CLOCK";
-TIMESPEC TS_logic_clock = PERIOD "TN_LOGIC_CLOCK" 24.95 ns HIGH 50 %;
-
-NET "elink_clock_p" TNM_NET = "TN_ELINK_CLOCK";
-TIMESPEC TS_elink_clock = PERIOD "TN_ELINK_CLOCK" 24.95 ns HIGH 50 %;
+NET "clock_p" TNM_NET = "TN_CLOCK";
+TIMESPEC TS_logic_clock = PERIOD "TN_CLOCK" 24.95 ns HIGH 50 %;
 
 #######################################################################################################################
 # CFGMCLK
@@ -22,22 +19,36 @@ TIMESPEC TS_clk_cfg_to_clk_logic = FROM "cfgmclk" TO "FFS" TIG;
 # GBT Deskew (Phase Shiftable) Clocks
 ########################################################################################################################
 
-NET "logic_clock_p" IOSTANDARD = LVDS_25;
-NET "logic_clock_p" DIFF_TERM = "FALSE";
-NET "logic_clock_n" IOSTANDARD = LVDS_25;
-NET "logic_clock_n" DIFF_TERM = "FALSE";
-
-NET "elink_clock_p" IOSTANDARD = LVDS_25;
-NET "elink_clock_p" DIFF_TERM = "FALSE";
-NET "elink_clock_n" IOSTANDARD = LVDS_25;
-NET "elink_clock_n" DIFF_TERM = "FALSE";
-
-### GBTx data clock -- these are 320MHz data clock (terminated outside), the phase is aligned such that rising edge is in the middle of the data bit
-NET "logic_clock_p"   LOC = AP20;
-NET "logic_clock_n"   LOC = AP21;
+#NET "logic_clock_p" IOSTANDARD = LVDS_25;
+#NET "logic_clock_p" DIFF_TERM = "FALSE";
+#NET "logic_clock_n" IOSTANDARD = LVDS_25;
+#NET "logic_clock_n" DIFF_TERM = "FALSE";
 #
-NET "elink_clock_p"   LOC = A10;
-NET "elink_clock_n"   LOC = B10;
+#NET "gbt_clock_p" IOSTANDARD = LVDS_25;
+#NET "gbt_clock_p" DIFF_TERM = "FALSE";
+#NET "gbt_clock_n" IOSTANDARD = LVDS_25;
+#NET "gbt_clock_n" DIFF_TERM = "FALSE";
+#
+#### GBTx data clock -- these are 320MHz data clock (terminated outside), the phase is aligned such that rising edge is in the middle of the data bit
+#NET "logic_clock_p"   LOC = AP20;
+#NET "logic_clock_n"   LOC = AP21;
+
+#NET "gbt_clock_p"   LOC = J9; # EPORT
+#NET "gbt_clock_n"   LOC = H9; # EPORT
+
+NET "clock_p"   LOC = J9; # EPORT
+NET "clock_n"   LOC = H9; # EPORT
+
+NET "clock_p" IOSTANDARD = LVDS_25;
+NET "clock_p" DIFF_TERM = "FALSE";
+#NET "clock_n" IOSTANDARD = LVDS_25;
+#NET "clock_n" DIFF_TERM = "FALSE";
+
+# This DSKW clock is connected but PLEASE note that is was discovered to be very sensitive to the phase
+# when a phase of more than 0 was applied, the quality of the clock declined SIGNIFICANTLY and created
+# serious problems with communicaton between the FPGA and GBT
+# NET "gbt_clock_p"   LOC = A10; # DSKW
+# NET "gbt_clock_n"   LOC = B10; # DSKW
 
 ########################################################################################################################
 # GBT
@@ -46,9 +57,9 @@ NET "elink_clock_n"   LOC = B10;
 # Output
 INST "elink_o_p" TNM = "elink_o_grp";
 INST "elink_o_n" TNM = "elink_o_grp";
-INST "gbt/gbt_serdes*/to_gbt_ser*/*" TNM = "elink_o_serdes_grp";
+#INST "gbt/gbt_serdes*/to_gbt_ser*/*" TNM = "elink_o_serdes_grp";
 
-TIMESPEC TS_ELINK_O_TIG = FROM "elink_o_serdes_grp" TO "elink_o_grp" TIG ;
+#TIMESPEC TS_ELINK_O_TIG = FROM "elink_o_serdes_grp" TO "elink_o_grp" TIG ;
 
 # Input
 INST "elink_i_p" TNM = "elink_i_grp";
@@ -68,3 +79,11 @@ NET "gbt/gbt_serdes/gbt_oversample/q[7]" MAXDELAY = 2 ns;
 
 INST "*/s_resync_1"                             TNM = "resync_grp";
 TIMESPEC TS_SYNC = FROM "FFS" TO "resync_grp" TIG;
+
+########################################################################################################################
+# MMCM LOCs
+########################################################################################################################
+
+#INST "clocking/gbt_clocking/mmcm_adv_inst" LOC= "MMCM_ADV_X0Y8";
+
+

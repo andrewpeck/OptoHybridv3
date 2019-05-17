@@ -850,6 +850,7 @@ def updateModuleFile(module):
                                         "    signal regs_write_arr       : t_std32_array(<num_regs> - 1 downto 0) := (others => (others => '0'));\n"\
                                         "    signal regs_addresses       : t_std32_array(<num_regs> - 1 downto 0) := (others => (others => '0'));\n"\
                                         "    signal regs_defaults        : t_std32_array(<num_regs> - 1 downto 0) := (others => (others => '0'));\n"\
+                                        "    signal regs_write_arr_sump  : std_logic_vector(<num_regs> - 1 downto 0);\n"\
                                         "    signal regs_read_pulse_arr  : std_logic_vector(<num_regs> - 1 downto 0) := (others => '0');\n"\
                                         "    signal regs_write_pulse_arr : std_logic_vector(<num_regs> - 1 downto 0) := (others => '0');\n"\
                                         "    signal regs_read_ready_arr  : std_logic_vector(<num_regs> - 1 downto 0) := (others => '1');\n" \
@@ -1002,11 +1003,11 @@ def updateModuleFile(module):
                     f.write ('        g_COUNTER_WIDTH  => %s\n' % (reg.msb - reg.lsb + 1))
                     f.write ('    )\n')
                     f.write ('    port map (\n')
-                    f.write ('        ref_clk_i => %s,\n' % (module.userClock))
-                    f.write ('        reset_i   => %s,\n' % (reg.fw_cnt_reset_signal))
-                    f.write ('        en_i      => %s,\n' % (reg.fw_cnt_en_signal))
-                    f.write ('        snap_i    => %s,\n' % (reg.fw_cnt_snap_signal))
-                    f.write ('        count_o   => %s\n'  % (reg.signal))
+                    f.write ('        clk_i   => %s,\n' % (module.userClock))
+                    f.write ('        rst_i   => %s,\n' % (reg.fw_cnt_reset_signal))
+                    f.write ('        en_i    => %s,\n' % (reg.fw_cnt_en_signal))
+                    f.write ('        snap_i  => %s,\n' % (reg.fw_cnt_snap_signal))
+                    f.write ('        count_o => %s\n'  % (reg.signal))
                     f.write ('    );\n')
                     f.write ('\n')
 
@@ -1022,10 +1023,10 @@ def updateModuleFile(module):
                     f.write ('        g_COUNTER_WIDTH  => %s\n' % (reg.msb - reg.lsb + 1))
                     f.write ('    )\n')
                     f.write ('    port map (\n')
-                    f.write ('        ref_clk_i => %s,\n' % (module.userClock))
-                    f.write ('        reset_i   => %s,\n' % (reg.fw_cnt_reset_signal))
-                    f.write ('        en_i      => %s,\n' % (reg.fw_cnt_en_signal))
-                    f.write ('        count_o   => %s\n'  % (reg.signal))
+                    f.write ('        clk_i   => %s,\n' % (module.userClock))
+                    f.write ('        rst_    => %s,\n' % (reg.fw_cnt_reset_signal))
+                    f.write ('        en_i    => %s,\n' % (reg.fw_cnt_en_signal))
+                    f.write ('        count_o => %s\n'  % (reg.signal))
                     f.write ('    );\n')
                     f.write ('\n')
 
@@ -1087,6 +1088,15 @@ def updateModuleFile(module):
                     f.write("    regs_writable_arr(%d) <= '1';\n" % (regAddr))
 
             f.write('\n')
+
+            # Sump
+            # sump unused writable signals
+
+            f.write('    -- Create a sump for unused write signals\n')
+            f.write('    sump_loop : for I in 0 to (%s-1) generate\n' % (VHDL_REG_CONSTANT_PREFIX + module.getVhdlName() + '_NUM_REGS' ))
+            f.write('    begin\n')
+            f.write('    regs_write_arr_sump (I) <= or_reduce (regs_write_arr(I));\n')
+            f.write('    end generate;\n')
 
     f.close()
     shutil.copy (tempname, module.file)

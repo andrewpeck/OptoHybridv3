@@ -30,6 +30,10 @@ def main():
     MARKER_END="<!-- END: ACTIVE_VFATS DO NOT EDIT -->"
     insert_code (ADDRESS_TABLE_TOP, ADDRESS_TABLE_TOP, MARKER_START, MARKER_END, write_active_vfats)
 
+    MARKER_START='<!-- START: BITSLIP_CNT DO NOT EDIT -->'
+    MARKER_END="<!-- END: BITSLIP_CNT DO NOT EDIT -->"
+    insert_code (ADDRESS_TABLE_TOP, ADDRESS_TABLE_TOP, MARKER_START, MARKER_END, write_bitslip_cnt)
+
 def write_overflow_counters (file_handle):
 
     f = file_handle
@@ -96,6 +100,26 @@ def write_vfat_mask (file_handle):
     f.write('%s    mask="%s"\n' % (padding, mask))
     f.write('%s    fw_signal="vfat_mask"\n' % (padding))
     f.write('%s    fw_default="0x0"/>\n' % (padding))
+
+def write_bitslip_cnt (file_handle):
+
+    f = file_handle
+    base_address = 0x0
+    num_bits_per_address = 3
+    num_regs_per_address = 32 // num_bits_per_address
+
+    for vfat in range (0, num_vfats):
+
+        address = base_address + vfat//num_regs_per_address
+        bitlow  = num_bits_per_address*vfat + 0
+        bithi   = num_bits_per_address*vfat + num_bits_per_address-1
+        mask    = (2**num_bits_per_address-1) << num_bits_per_address*(vfat%num_regs_per_address)
+
+        padding = "                " #spaces for indentation
+        f.write('%s<node id="VFAT%i" address="0x%X" permission="r"\n' % (padding, vfat, address))
+        f.write('%s    description="Bitslip count for VFAT%d"\n' % (padding, vfat))
+        f.write('%s    mask="0x%x"\n' % (padding, mask))
+        f.write('%s    fw_signal="bitslip_cnt(%d)"/>\n' % (padding, vfat))
 
 def write_active_vfats (file_handle):
 

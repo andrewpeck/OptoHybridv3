@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Mon May  6 19:36:43 2019
+# Date: Tue May 14 22:33:30 2019
 #
 ##############################################################
 #
@@ -64,44 +64,44 @@ CSET clkfb_out_n_port=CLKFB_OUT_N
 CSET clkfb_out_p_port=CLKFB_OUT_P
 CSET clkfb_out_port=CLKFB_OUT
 CSET clkfb_stopped_port=CLKFB_STOPPED
-CSET clkin1_jitter_ps=49.9
-CSET clkin1_ui_jitter=0.002
+CSET clkin1_jitter_ps=124.75
+CSET clkin1_ui_jitter=0.005
 CSET clkin2_jitter_ps=100.0
 CSET clkin2_ui_jitter=0.010
-CSET clkout1_drives=BUFGCE
+CSET clkout1_drives=BUFG
 CSET clkout1_requested_duty_cycle=50.000
-CSET clkout1_requested_out_freq=40.08
+CSET clkout1_requested_out_freq=40.080
 CSET clkout1_requested_phase=0.000
-CSET clkout2_drives=BUFGCE
+CSET clkout2_drives=BUFG
 CSET clkout2_requested_duty_cycle=50.000
 CSET clkout2_requested_out_freq=80.160
 CSET clkout2_requested_phase=0.000
 CSET clkout2_used=true
-CSET clkout3_drives=BUFGCE
+CSET clkout3_drives=BUFG
 CSET clkout3_requested_duty_cycle=50.000
-CSET clkout3_requested_out_freq=160.321
+CSET clkout3_requested_out_freq=160.32
 CSET clkout3_requested_phase=0.000
 CSET clkout3_used=true
-CSET clkout4_drives=BUFGCE
+CSET clkout4_drives=BUFG
 CSET clkout4_requested_duty_cycle=50.000
-CSET clkout4_requested_out_freq=160.321
+CSET clkout4_requested_out_freq=160.32
 CSET clkout4_requested_phase=90
 CSET clkout4_used=true
-CSET clkout5_drives=BUFGCE
+CSET clkout5_drives=BUFG
 CSET clkout5_requested_duty_cycle=50.000
-CSET clkout5_requested_out_freq=200.401
+CSET clkout5_requested_out_freq=200.4
 CSET clkout5_requested_phase=0
 CSET clkout5_used=true
 CSET clkout6_drives=BUFG
 CSET clkout6_requested_duty_cycle=50.000
 CSET clkout6_requested_out_freq=40.08
 CSET clkout6_requested_phase=0
-CSET clkout6_used=true
+CSET clkout6_used=false
 CSET clkout7_drives=BUFG
 CSET clkout7_requested_duty_cycle=50.000
 CSET clkout7_requested_out_freq=160.321
 CSET clkout7_requested_phase=0
-CSET clkout7_used=true
+CSET clkout7_used=false
 CSET clock_mgr_type=MANUAL
 CSET component_name=logic_clocking
 CSET daddr_port=DADDR
@@ -186,10 +186,10 @@ CSET mmcm_clock_hold=false
 CSET mmcm_compensation=ZHOLD
 CSET mmcm_divclk_divide=1
 CSET mmcm_notes=None
-CSET mmcm_ref_jitter1=0.002
+CSET mmcm_ref_jitter1=0.005
 CSET mmcm_ref_jitter2=0.010
 CSET mmcm_startup_wait=false
-CSET num_out_clks=7
+CSET num_out_clks=5
 CSET override_dcm=false
 CSET override_dcm_clkgen=false
 CSET override_mmcm=false
@@ -222,10 +222,10 @@ CSET pll_compensation=SYSTEM_SYNCHRONOUS
 CSET pll_divclk_divide=1
 CSET pll_notes=None
 CSET pll_ref_jitter=0.010
-CSET power_down_port=POWER_DOWN
+CSET power_down_port=powerdown_i
 CSET prim_in_freq=40.08
-CSET prim_in_jitter=0.002
-CSET prim_source=Differential_clock_capable_pin
+CSET prim_in_jitter=0.005
+CSET prim_source=No_buffer
 CSET primary_port=clk_in1
 CSET primitive=MMCM
 CSET primtype_sel=MMCM_ADV
@@ -256,7 +256,7 @@ CSET use_max_i_jitter=false
 CSET use_min_o_jitter=false
 CSET use_min_power=false
 CSET use_phase_alignment=true
-CSET use_power_down=false
+CSET use_power_down=true
 CSET use_reset=false
 CSET use_spread_spectrum=false
 CSET use_spread_spectrum_1=false
@@ -266,4 +266,4 @@ CSET use_status=false
 MISC pkg_timestamp=2012-05-10T12:44:55Z
 # END Extra information
 GENERATE
-# CRC: 8c7be314
+# CRC: 4023363c

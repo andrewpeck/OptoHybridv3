@@ -13,6 +13,7 @@
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.STD_LOGIC_MISC.ALL;
 use IEEE.NUMERIC_STD.all;
 
 use work.ipbus_pkg.all;
@@ -42,7 +43,9 @@ entity ipbus_slave is
 
         regs_defaults_arr_i    : in  t_std32_array(g_NUM_REGS - 1 downto 0);    -- register default values - set when ipb_reset_i = '1'
         writable_regs_i        : in  std_logic_vector(g_NUM_REGS - 1 downto 0); -- bitmask indicating which registers are writable and need defaults to be loaded (this helps to save resources)
-        individual_addrs_arr_i : in  t_std32_array(g_NUM_REGS - 1 downto 0)     -- individual register addresses - only used when g_USE_INDIVIDUAL_ADDRS = "TRUE"
+        individual_addrs_arr_i : in  t_std32_array(g_NUM_REGS - 1 downto 0);    -- individual register addresses - only used when g_USE_INDIVIDUAL_ADDRS = "TRUE"
+
+        sump : out std_logic
     );
 end ipbus_slave;
 
@@ -53,6 +56,8 @@ architecture Behavioral of ipbus_slave is
     signal ipb_addr_valid   : std_logic := '0';
     signal ipb_miso         : ipb_rbus;
     signal ipb_mosi         : ipb_wbus;
+
+    signal adr_sump       : std_logic_vector(g_NUM_REGS - 1 downto 0);
 
     -- data on ipbus clock domain
     signal reg_read_data            : std_logic_vector(31 downto 0) := (others => '0');
@@ -85,6 +90,7 @@ architecture Behavioral of ipbus_slave is
 
 begin
 
+    sump <= or_reduce(adr_sump);
     ipb_miso_o <= ipb_miso;
 
     p_ipb_fsm:
@@ -181,13 +187,6 @@ begin
                         ipb_miso.ipb_ack <= '0';
                         ipb_miso.ipb_err <= '0';
                         ipb_state          <= IDLE;
-                    when others =>
-                        ipb_miso  <= (ipb_ack => '0', ipb_err => '0', ipb_rdata => (others => '0'));
-                        ipb_state   <= IDLE;
-                        ipb_reg_sel <= 0;
-                        regs_write_strb <= '0';
-                        regs_read_strb  <= '0';
-                        ipb_timer <= (others => '0');
                 end case;
             end if;
         end if;
@@ -313,5 +312,11 @@ begin
         end if;
     end process p_usr_clk_read_sync;
 
+
+    -- Create a sump for unused addresses
+    sump_loop : for I in 0 to (g_NUM_REGS-1) generate
+    begin
+    adr_sump (I) <= or_reduce (individual_addrs_arr_i(I));
+    end generate;
 
 end Behavioral;

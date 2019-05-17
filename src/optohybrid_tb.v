@@ -392,11 +392,8 @@ parameter DDR = 0;
 
   optohybrid_top optohybrid_top (
 
-      .logic_clock_p    (logic_clock_p),
-      .logic_clock_n    (logic_clock_n),
-
-      .elink_clock_p    (elink_clock_p),
-      .elink_clock_n    (elink_clock_n),
+      .clock_p    (logic_clock_p),
+      .clock_n    (logic_clock_n),
 
       .elink_i_p     (elink_i_p),
       .elink_i_n     (elink_i_n),

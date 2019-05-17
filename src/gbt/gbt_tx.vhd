@@ -29,9 +29,9 @@ entity gbt_tx is
         g_FRAME_WIDTH     : integer := 6
     );
     port(
-    clock       : in std_logic;
+    clk_i       : in std_logic;
 
-    reset_i     : in std_logic;
+    rst_i       : in std_logic;
 
     data_o      : out std_logic_vector(7 downto 0);
 
@@ -49,14 +49,13 @@ architecture Behavioral of gbt_tx is
 
     signal data_frame_cnt   : integer range 0 to (g_FRAME_COUNT_MAX-1) := 0;
 
-    signal req_valid : std_logic;
     signal frame     : std_logic_vector (g_FRAME_COUNT_MAX-1 downto 0);
     signal reg_data  : std_logic_vector (g_FRAME_COUNT_MAX*g_FRAME_WIDTH-1 downto 0); -- multiples of 6
 
     signal send_idle   : std_logic;
     signal send_header : std_logic;
 
-    signal reset : std_logic;
+    signal rst : std_logic;
 
 begin
 
@@ -64,17 +63,17 @@ begin
 
     -- fanout reset tree
 
-    process (clock) begin
-        if (rising_edge(clock)) then
-            reset <= reset_i;
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
+            rst <= rst_i;
         end if;
     end process;
 
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
-            if (reset = '1') then
+        if (rising_edge(clk_i)) then
+            if (rst = '1') then
                 state <= IDLE;
             else
                 case state is
@@ -115,32 +114,26 @@ begin
 
     --== REQUEST and TRACKING DATA==--
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
-            if (reset = '1') then
-                req_en_o <= '0'; req_valid <= '0';
+        if (rising_edge(clk_i)) then
+            if (rst = '1') then
+                req_en_o <= '0';
             else
                 case state is
                     when IDLE =>
                         send_idle   <= '1';
                         send_header <= '0';
                         req_en_o    <= '1';
-                        req_valid   <= req_valid_i;
                     when HEADER =>
                         send_idle   <= '0';
                         send_header <= '1';
                         req_en_o    <= '0';
-                        req_valid   <= req_valid_i;
                     when DATA      =>
                         send_header <= '0';
                         send_idle   <= '0';
                         req_en_o    <= '0';
-                        if (data_frame_cnt=(g_FRAME_COUNT_MAX-1)) then
-                            req_valid <= req_valid_i;
-                        end if;
-
-                    when others =>    send_idle <= '1'; req_en_o  <= '0'; req_valid <= '0'; send_header <='0';
+                    when others =>    send_idle <= '1'; req_en_o  <= '0'; send_header <='0';
 
                 end case;
             end if;
@@ -149,10 +142,10 @@ begin
 
     --== SEND ==--
 
-    process(clock)
+    process(clk_i)
     begin
-        if (rising_edge(clock)) then
-            if (reset = '1') then
+        if (rising_edge(clk_i)) then
+            if (rst = '1') then
                 frame <= (others => '0');
             else
                 case state is
@@ -168,7 +161,7 @@ begin
     -- 8b to 6b conversion
     sixbit_eightbit_inst : entity work.sixbit_eightbit
     port map (
-        clock        => clock,
+        clock        => clk_i,
         eightbit     => data_o,
         sixbit       => frame,
         --ttc

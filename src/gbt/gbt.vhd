@@ -12,6 +12,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 library unisim;
@@ -29,16 +30,12 @@ generic(
 );
 port(
 
-    reset_i            : in std_logic;
+    rst_i              : in std_logic;
 
-    clock_i            : in std_logic; -- 40 MHz logic clock
-
-    gbt_clk40          : in std_logic; -- 40  MHz phase shiftable frame clock from GBT
-    gbt_clk80          : in std_logic; -- 40  MHz phase shiftable frame clock from GBT
-    gbt_clk160_0       : in std_logic; -- 320 MHz phase shiftable frame clock from GBT
-    gbt_clk160_90      : in std_logic; -- 320 MHz phase shiftable frame clock from GBT
-    gbt_clk160_180     : in std_logic; -- 320 MHz phase shiftable frame clock from GBT
-    gbt_clk320         : in std_logic; -- 320 MHz phase shiftable frame clock from GBT
+    clk_1x             : in std_logic; -- 40  MHz
+    clk_2x             : in std_logic; -- 80  MHz
+    clk_4x             : in std_logic; -- 160 MHz
+    clk_4x_90           : in std_logic; -- 160 MHz
 
     elink_i_p          : in  std_logic;
     elink_i_n          : in  std_logic;
@@ -46,8 +43,7 @@ port(
     elink_o_p          : out std_logic;
     elink_o_n          : out std_logic;
 
-    gbt_link_error_o   : out std_logic;
-    gbt_link_ready_o   : out std_logic;
+    gbt_link_rdy_o     : out std_logic;
 
     l1a_o              : out std_logic;
     bc0_o              : out std_logic;
@@ -68,7 +64,9 @@ port(
     -- wishbone slave
     ipb_mosi_i         : in  ipb_wbus;
     ipb_miso_o         : out ipb_rbus;
-    ipb_reset_i        : in std_logic
+    ipb_rst_i          : in std_logic;
+
+    sump               : out std_logic
 );
 
 end gbt;
@@ -78,11 +76,9 @@ architecture Behavioral of gbt is
     signal gbt_tx_data        : std_logic_vector(7 downto 0) := (others => '0');
     signal gbt_rx_data        : std_logic_vector(7 downto 0) := (others => '0');
 
-    signal gbt_link_error     : std_logic;
+    signal gbt_link_err     : std_logic;
     signal gbt_link_unstable  : std_logic;
-    signal gbt_link_ready     : std_logic;
-
-    signal gbt_link_err_ready : std_logic;
+    signal gbt_link_rdy     : std_logic;
 
     signal l1a_force          : std_logic;
     signal bc0_force          : std_logic;
@@ -92,10 +88,9 @@ architecture Behavioral of gbt is
     signal bc0_gbt            : std_logic;
     signal resync_gbt         : std_logic;
 
-    signal reset              : std_logic;
-    signal cnt_reset          : std_logic;
-
-    signal tx_delay           : std_logic_vector (4 downto 0);
+    signal rst              : std_logic;
+    signal cnt_rst          : std_logic;
+    signal cnt_rst_ipb      : std_logic;
 
     -- wishbone master
     signal ipb_mosi : ipb_wbus;
@@ -106,6 +101,7 @@ architecture Behavioral of gbt is
     signal regs_write_arr       : t_std32_array(REG_GBT_NUM_REGS - 1 downto 0) := (others => (others => '0'));
     signal regs_addresses       : t_std32_array(REG_GBT_NUM_REGS - 1 downto 0) := (others => (others => '0'));
     signal regs_defaults        : t_std32_array(REG_GBT_NUM_REGS - 1 downto 0) := (others => (others => '0'));
+    signal regs_write_arr_sump  : std_logic_vector(REG_GBT_NUM_REGS - 1 downto 0);
     signal regs_read_pulse_arr  : std_logic_vector(REG_GBT_NUM_REGS - 1 downto 0) := (others => '0');
     signal regs_write_pulse_arr : std_logic_vector(REG_GBT_NUM_REGS - 1 downto 0) := (others => '0');
     signal regs_read_ready_arr  : std_logic_vector(REG_GBT_NUM_REGS - 1 downto 0) := (others => '1');
@@ -119,6 +115,8 @@ architecture Behavioral of gbt is
 
 begin
 
+    sump <= or_reduce(regs_write_arr_sump);
+
     -- wishbone master
 
     ipb_mosi_o <= ipb_mosi;
@@ -126,18 +124,18 @@ begin
 
     -- fanout reset tree
 
-    process (clock_i) begin
-        if (rising_edge(clock_i)) then
-            reset <= reset_i;
-            cnt_reset <= (reset_i or resync_gbt or resync_force);
+    process (clk_1x) begin
+        if (rising_edge(clk_1x)) then
+            rst <= rst_i;
+            cnt_rst <= (cnt_rst_ipb or rst_i or resync_gbt or resync_force);
         end if;
     end process;
 
-    process (clock_i) begin
-        if (rising_edge(clock_i)) then
-            l1a_o        <= l1a_force or l1a_gbt;
-            bc0_o        <= bc0_force or bc0_gbt;
-            resync_o     <= resync_force or resync_gbt;
+    process (clk_1x) begin
+        if (rising_edge(clk_1x)) then
+            l1a_o        <= l1a_force     or  l1a_gbt;
+            bc0_o        <= bc0_force     or  bc0_gbt;
+            resync_o     <= resync_force  or  resync_gbt;
         end if;
     end process;
 
@@ -145,34 +143,27 @@ begin
     -- GBT Serdes
     --------------------------------------------------------------------------------------------------------------------
 
-    -- at 320 MHz performs ser-des on incoming
     gbt_serdes : entity work.gbt_serdes
     port map(
-        -- reset
-       reset_i          => reset,
+        -- rst
+       rst_i            => rst,
 
        -- input clocks
 
-       gbt_clk40      => gbt_clk40,      -- 40 MHz phase shiftable frame clock from GBT
-       gbt_clk80      => gbt_clk80,      -- 80 MHz phase shiftable frame clock from GBT
-       gbt_clk160_0   => gbt_clk160_0,   --
-       gbt_clk160_90  => gbt_clk160_90,  --
-       gbt_clk160_180 => gbt_clk160_180, --
-       gbt_clk320     => gbt_clk320,     -- 320 MHz phase shiftable frame clock from GBT
-
-       clock            => clock_i,     -- 40 MHz logic clock
+       clk_1x           => clk_1x,      -- 40 MHz phase shiftable frame clock from GBT
+       clk_2x           => clk_2x,      -- 80 MHz phase shiftable frame clock from GBT
+       clk_4x           => clk_4x,   --
+       clk_4x_90        => clk_4x_90,  --
 
        -- serial data
-       elink_o_p      => elink_o_p,  -- output e-links
-       elink_o_n      => elink_o_n,  -- output e-links
+       elink_o_p        => elink_o_p,  -- output e-links
+       elink_o_n        => elink_o_n,  -- output e-links
 
-       elink_i_p       => elink_i_p,   -- input e-links
-       elink_i_n       => elink_i_n,   -- input e-links
+       elink_i_p        => elink_i_p,   -- input e-links
+       elink_i_n        => elink_i_n,   -- input e-links
 
-       gbt_link_error_i => gbt_link_error,
-       gbt_ready_i => gbt_link_ready,
-
-       tx_delay_i         => tx_delay,
+       gbt_link_err_i   => gbt_link_err,
+       gbt_link_rdy_i   => gbt_link_rdy,
 
        -- parallel data
        data_o           => gbt_rx_data,    -- Parallel data out
@@ -186,36 +177,33 @@ begin
     gbt_link : entity work.gbt_link
     port map(
 
-        -- reset
-        reset_i         => reset,
+        -- rst
+        rst_i              => rst,
 
         -- clock inputs
-        clock           => clock_i, -- 40 MHz ttc fabric clock
+        clk_i              => clk_1x, -- 40 MHz ttc fabric clock
 
         -- parallel data
-        data_i          => gbt_rx_data,
-        data_o          => gbt_tx_data,
+        data_i             => gbt_rx_data,
+        data_o             => gbt_tx_data,
 
         -- wishbone master
-        ipb_mosi_o    => ipb_mosi,
-        ipb_miso_i    => ipb_miso,
+        ipb_mosi_o         => ipb_mosi,
+        ipb_miso_i         => ipb_miso,
 
         -- decoded TTC
-        resync_o        => resync_gbt,
-        l1a_o           => l1a_gbt,
-        bc0_o           => bc0_gbt,
+        resync_o           => resync_gbt,
+        l1a_o              => l1a_gbt,
+        bc0_o              => bc0_gbt,
 
         -- outputs
-        unstable_o      => gbt_link_unstable,
-        ready_o         => gbt_link_ready,
-        error_o         => gbt_link_error
+        unstable_o         => gbt_link_unstable,
+        rdy_o              => gbt_link_rdy,
+        err_o              => gbt_link_err
 
     );
 
-    gbt_link_err_ready <= gbt_link_ready and gbt_link_error;
-
-    gbt_link_ready_o <= gbt_link_ready;
-    gbt_link_error_o <= gbt_link_error;
+    gbt_link_rdy_o <= gbt_link_rdy;
 
     --===============================================================================================
     -- (this section is generated by <optohybrid_top>/tools/generate_registers.py -- do not edit)
@@ -230,11 +218,11 @@ begin
            g_USE_INDIVIDUAL_ADDRS => true
        )
        port map(
-           ipb_reset_i            => ipb_reset_i,
-           ipb_clk_i              => clock_i,
+           ipb_reset_i            => ipb_rst_i,
+           ipb_clk_i              => clk_1x,
            ipb_mosi_i             => ipb_mosi_i,
            ipb_miso_o             => ipb_miso_o,
-           usr_clk_i              => clock_i,
+           usr_clk_i              => clk_1x,
            regs_read_arr_i        => regs_read_arr,
            regs_write_arr_o       => regs_write_arr,
            read_pulse_arr_o       => regs_read_pulse_arr,
@@ -253,23 +241,24 @@ begin
     regs_addresses(3)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= x"5";
     regs_addresses(4)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= x"6";
     regs_addresses(5)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= x"7";
+    regs_addresses(6)(REG_GBT_ADDRESS_MSB downto REG_GBT_ADDRESS_LSB) <= x"8";
 
     -- Connect read signals
     regs_read_arr(0)(REG_GBT_TX_CNT_RESPONSE_SENT_MSB downto REG_GBT_TX_CNT_RESPONSE_SENT_LSB) <= cnt_ipb_response;
     regs_read_arr(1)(REG_GBT_TX_TX_READY_BIT) <= gbt_txready_i;
-    regs_read_arr(1)(REG_GBT_TX_TX_DELAY_MSB downto REG_GBT_TX_TX_DELAY_LSB) <= tx_delay;
     regs_read_arr(2)(REG_GBT_RX_RX_READY_BIT) <= gbt_rxready_i;
     regs_read_arr(2)(REG_GBT_RX_RX_VALID_BIT) <= gbt_rxvalid_i;
+    regs_read_arr(2)(REG_GBT_RX_RX_UNSTABLE_BIT) <= gbt_link_unstable;
     regs_read_arr(2)(REG_GBT_RX_CNT_REQUEST_RECEIVED_MSB downto REG_GBT_RX_CNT_REQUEST_RECEIVED_LSB) <= cnt_ipb_request;
     regs_read_arr(3)(REG_GBT_RX_CNT_LINK_ERR_MSB downto REG_GBT_RX_CNT_LINK_ERR_LSB) <= cnt_link_err;
 
     -- Connect write signals
-    tx_delay <= regs_write_arr(1)(REG_GBT_TX_TX_DELAY_MSB downto REG_GBT_TX_TX_DELAY_LSB);
 
     -- Connect write pulse signals
     l1a_force <= regs_write_pulse_arr(3);
     bc0_force <= regs_write_pulse_arr(4);
     resync_force <= regs_write_pulse_arr(5);
+    cnt_rst_ipb <= regs_write_pulse_arr(6);
 
     -- Connect write done signals
 
@@ -282,11 +271,11 @@ begin
         g_COUNTER_WIDTH  => 24
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => cnt_reset,
-        en_i      => ipb_miso.ipb_ack,
-        snap_i    => cnt_snap,
-        count_o   => cnt_ipb_response
+        clk_i   => clk_1x,
+        rst_i   => cnt_rst,
+        en_i    => ipb_miso.ipb_ack,
+        snap_i  => cnt_snap,
+        count_o => cnt_ipb_response
     );
 
 
@@ -295,11 +284,11 @@ begin
         g_COUNTER_WIDTH  => 24
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => cnt_reset,
-        en_i      => ipb_mosi.ipb_strobe,
-        snap_i    => cnt_snap,
-        count_o   => cnt_ipb_request
+        clk_i   => clk_1x,
+        rst_i   => cnt_rst,
+        en_i    => ipb_mosi.ipb_strobe,
+        snap_i  => cnt_snap,
+        count_o => cnt_ipb_request
     );
 
 
@@ -308,11 +297,11 @@ begin
         g_COUNTER_WIDTH  => 24
     )
     port map (
-        ref_clk_i => clock_i,
-        reset_i   => cnt_reset,
-        en_i      => gbt_link_err_ready,
-        snap_i    => cnt_snap,
-        count_o   => cnt_link_err
+        clk_i   => clk_1x,
+        rst_i   => cnt_rst,
+        en_i    => gbt_link_rdy and gbt_link_err,
+        snap_i  => cnt_snap,
+        count_o => cnt_link_err
     );
 
 
@@ -321,10 +310,13 @@ begin
     -- Connect read ready signals
 
     -- Defaults
-    regs_defaults(1)(REG_GBT_TX_TX_DELAY_MSB downto REG_GBT_TX_TX_DELAY_LSB) <= REG_GBT_TX_TX_DELAY_DEFAULT;
 
     -- Define writable regs
-    regs_writable_arr(1) <= '1';
 
+    -- Create a sump for unused write signals
+    sump_loop : for I in 0 to (REG_GBT_NUM_REGS-1) generate
+    begin
+    regs_write_arr_sump (I) <= or_reduce (regs_write_arr(I));
+    end generate;
     --==== Registers end ============================================================================
 end Behavioral;

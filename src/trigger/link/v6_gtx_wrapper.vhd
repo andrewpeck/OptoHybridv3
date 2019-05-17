@@ -6,6 +6,8 @@ use UNISIM.VCOMPONENTS.ALL;
 
 library work;
 use work.types_pkg.all;
+library ieee;
+use ieee.std_logic_misc.all;
 
 --***********************************Entity Declaration************************
 
@@ -57,6 +59,9 @@ architecture Behavioral of v6_gtx_wrapper is
 
     constant DLY : time := 1 ns;
 
+    signal sump : std_logic;
+    signal sump_vector : std_logic_vector (9 downto 0);
+
     signal mgt_refclk0 : std_logic;
     signal mgt_refclk1 : std_logic;
 
@@ -67,7 +72,6 @@ architecture Behavioral of v6_gtx_wrapper is
     -------- Transmit Ports - TX Elastic Buffer and Phase Alignment Ports ------
 
     signal  gtx_txdlyaligndisable_i : std_logic_vector (3 downto 0);
-    signal  gtx_txdlyalignmonenb_i  : std_logic_vector (3 downto 0);
     signal  gtx_txdlyalignreset_i   : std_logic_vector (3 downto 0);
     signal  gtx_txenpmaphasealign_i : std_logic_vector (3 downto 0);
     signal  gtx_txpmasetphase_i     : std_logic_vector (3 downto 0);
@@ -93,6 +97,8 @@ architecture Behavioral of v6_gtx_wrapper is
     signal GTX_TXDATA_IN : t_std16_array (3 downto 0);
 
 begin
+
+    sump <= or_reduce (sump_vector);
 
     GTX_TXCHARISK_IN(0) <= GTX0_TXCHARISK_IN;
     GTX_TXCHARISK_IN(1) <= GTX1_TXCHARISK_IN;
@@ -139,8 +145,8 @@ begin
           TXPREEMPHASIS_IN           =>      "0000",
           -------- Transmit Ports - TX Elastic Buffer and Phase Alignment Ports ------
           TXDLYALIGNDISABLE_IN       =>      gtx_txdlyaligndisable_i(I),
-          TXDLYALIGNMONENB_IN        =>      gtx_txdlyalignmonenb_i(I),
-          TXDLYALIGNMONITOR_OUT      =>      open,
+          TXDLYALIGNMONENB_IN        =>      '0',
+          TXDLYALIGNMONITOR_OUT      =>      sump_vector(7 downto 0),
           TXDLYALIGNRESET_IN         =>      gtx_txdlyalignreset_i(I),
           TXENPMAPHASEALIGN_IN       =>      gtx_txenpmaphasealign_i(I),
           TXPMASETPHASE_IN           =>      gtx_txpmasetphase_i(I),
@@ -203,7 +209,7 @@ begin
 
     q3_clk0_refclk_ibufds_i : IBUFDS_GTXE1 port map (
       O                               =>  mgt_refclk0,
-      ODIV2                           =>  open,
+      ODIV2                           =>  sump_vector(8),
       CEB                             =>  '0',
       I                               =>  refclk_p(0),  -- Connect to package pin P6
       IB                              =>  refclk_n(0)  -- Connect to package pin P5
@@ -211,7 +217,7 @@ begin
 
     q3_clk1_refclk_ibufds_i : IBUFDS_GTXE1 port map (
       O                               =>  mgt_refclk1,
-      ODIV2                           =>  open,
+      ODIV2                           =>  sump_vector(9),
       CEB                             =>  '0',
       I                               =>  refclk_p(1),
       IB                              =>  refclk_n(1)

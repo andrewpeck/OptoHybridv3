@@ -25,16 +25,14 @@ generic (
     g_INCREMENT_STEP : integer := 1
 );
 port(
+    clk_i   : in std_logic;
+    rst_i   : in std_logic;
 
-    ref_clk_i   : in std_logic;
-    reset_i     : in std_logic;
+    en_i    : in std_logic;
 
-    en_i        : in std_logic;
+    snap_i  : in std_logic;
 
-    snap_i      : in std_logic;
-
-    count_o     : out std_logic_vector(g_COUNTER_WIDTH-1 downto 0)
-
+    count_o : out std_logic_vector(g_COUNTER_WIDTH-1 downto 0)
 );
 end counter_snap;
 
@@ -50,15 +48,15 @@ begin
 
 	 count_o <= count_copy;
 
-    process (ref_clk_i) begin
-    if (rising_edge(ref_clk_i)) then
-        reset <= reset_i;
+    process (clk_i) begin
+    if (rising_edge(clk_i)) then
+        reset <= rst_i;
     end if;
     end process;
 
-    process(ref_clk_i)
+    process(clk_i)
     begin
-        if (rising_edge(ref_clk_i)) then
+        if (rising_edge(clk_i)) then
             if (reset = '1') then
                 count <= (others => '0');
             else
@@ -75,5 +73,5 @@ begin
             end if;
         end if;
     end process;
-	 
+
 end Behavioral;

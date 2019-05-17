@@ -20,15 +20,21 @@ end iodelay;
 
 architecture behavioral of iodelay is
 
+  attribute IODELAY_GROUP: string;
+
 begin
 
   ----------------------------------------------------------------------------------------------------------------------
   -- IODELAY
   ----------------------------------------------------------------------------------------------------------------------
 
-  iodelay_v6 : IF (FPGA_TYPE="VIRTEX6") GENERATE
+  iodelay_virtex : IF (FPGA_TYPE="VIRTEX6") GENERATE
 
-  iodelay:iodelaye1
+  attribute IODELAY_GROUP of iodelay_inst: label is "IODELAY_GROUP";
+
+  begin
+
+  iodelay_inst : iodelaye1
   generic map(
           IDELAY_TYPE           => "VAR_LOADABLE",
           IDELAY_VALUE          => 0, -- ignored in var_loadable
@@ -49,11 +55,15 @@ begin
           dataout     => data_o,
           cntvalueout => open
   );
-  end generate iodelay_v6;
+  end generate iodelay_virtex;
 
-  iodelay_a7 : IF (FPGA_TYPE="ARTIX7") GENERATE
+  iodelay_artix : IF (FPGA_TYPE="ARTIX7") GENERATE
 
-  iodelay_a7:idelaye2
+  attribute IODELAY_GROUP of iodelay_inst: label is "IODELAY_GROUP";
+
+  begin
+
+  iodelay_inst :idelaye2
   generic map (
         CINVCTRL_SEL          => "FALSE",    -- Enable dynamic clock inversion (FALSE, TRUE)
         DELAY_SRC             => "IDATAIN",  -- Delay input (IDATAIN, DATAIN)
@@ -61,7 +71,7 @@ begin
         IDELAY_TYPE           => "VAR_LOAD", -- FIXED, VARIABLE, VAR_LOAD, VAR_LOAD_PIPE
         IDELAY_VALUE          => 0,          -- Input delay tap setting (0-31)
         PIPE_SEL              => "FALSE",    -- Select pipelined mode, FALSE, TRUE
-        REFCLK_FREQUENCY      => 200.401,      -- IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
+        REFCLK_FREQUENCY      => 200.4,      -- IDELAYCTRL clock input frequency in MHz (190.0-210.0, 290.0-310.0).
         SIGNAL_PATTERN        => "DATA"      -- DATA, CLOCK input signal
 	)
    port map (
@@ -79,6 +89,6 @@ begin
         REGRST      => '1'          -- 1-bit input: Active-high reset tap-delay input
   );
 
-  end generate iodelay_a7;
+  end generate iodelay_artix;
 
 end behavioral;

@@ -24,18 +24,16 @@ use unisim.vcomponents.all;
 
 library work;
 use work.types_pkg.all;
-
-library work;
 use work.ipbus_pkg.all;
 
 entity gbt_link is
 port(
 
     -- reset
-    reset_i         : in std_logic;
+    rst_i         : in std_logic;
 
-    -- clock inputs
-    clock         : in std_logic;
+    -- clk inputs
+    clk_i         : in std_logic;
 
     -- parallel data to/from serdes
     data_i          : in std_logic_vector (7 downto 0);
@@ -51,8 +49,8 @@ port(
     resync_o        : out std_logic;
 
     -- status
-    ready_o         : out std_logic;
-    error_o         : out std_logic;
+    rdy_o         : out std_logic;
+    err_o         : out std_logic;
     unstable_o      : out std_logic
 
 );
@@ -62,9 +60,9 @@ architecture Behavioral of gbt_link is
 
     --== GTX requests ==--
 
-    signal ready       : std_logic := '0'; -- gbt rx link is good
+    signal rx_rdy       : std_logic := '0'; -- gbt rx link is good
     signal rx_unstable : std_logic := '1'; -- gbt rx link was good then went bad
-    signal rx_error    : std_logic := '1'; -- error on gbt rx link
+    signal rx_err    : std_logic := '1'; -- err on gbt rx link
 
     signal gbt_rx_req  : std_logic := '0'; -- rx fifo write request
     signal gbt_rx_data : std_logic_vector(IPB_REQ_BITS-1 downto 0) := (others => '0');
@@ -76,28 +74,28 @@ architecture Behavioral of gbt_link is
     signal oh_tx_valid : std_logic := '0'; -- tx fifo data available
     signal oh_tx_data  : std_logic_vector(31 downto 0) := (others => '0');
 
-    signal reset       : std_logic := '1';
+    signal rst       : std_logic := '1';
 
 begin
 
     -- outputs
 
     -- reset fanout
-    process (clock) begin
-        if (rising_edge(clock)) then
-            reset <= reset_i;
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
+            rst <= rst_i;
         end if;
     end process;
 
-    ready_o <= ready;
-    error_o <= rx_error;
+    rdy_o <= rx_rdy;
+    err_o <= rx_err;
 
-    process (clock) begin
-        if (rising_edge(clock)) then
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
 
-            if (reset='1') then
+            if (rst='1') then
                 rx_unstable <= '0';
-            elsif (ready='1' and rx_error='1') then
+            elsif (rx_rdy='1' and rx_err='1') then
                 rx_unstable <= '1';
             end if;
 
@@ -112,25 +110,25 @@ begin
     gbt_rx : entity work.gbt_rx
     port map(
         -- reset
-        reset_i      => reset,
+        rst_i      => rst,
 
-        -- ttc clock input
-        clock      => clock,
+        -- ttc clk_i input
+        clk_i      => clk_i,
 
         -- parallel data input from deserializer
         data_i       => data_i,
 
         -- decoded ttc commands
-        l1a_o         => l1a_o,
-        bc0_o         => bc0_o,
-        resync_o      => resync_o,
+        l1a_o        => l1a_o,
+        bc0_o        => bc0_o,
+        resync_o     => resync_o,
 
         req_en_o     => gbt_rx_req, -- 1 bit, wishbone request recevied from GBTx
         req_data_o   => gbt_rx_data, -- 49 bit packet (1 bit we + 16 bit addr + 32 bit data)
 
         -- status
-        ready_o      => ready,
-        error_o      => rx_error
+        rdy_o      => rx_rdy,
+        err_o      => rx_err
     );
 
     --============--
@@ -140,10 +138,10 @@ begin
     gbt_tx : entity work.gbt_tx
     port map(
         -- reset
-        reset_i     => reset,
+        rst_i     => rst,
 
-        -- ttc clock input
-        clock     => clock,
+        -- ttc clk input
+        clk_i   => clk_i,
 
         -- parallel data input from fifo
         req_valid_i => oh_tx_valid, -- 1  bit write request from OH logic (through request fifo)
@@ -160,8 +158,8 @@ begin
 
     -- create fifos to buffer between GBT and wishbone
 
-    process (clock) begin
-        if (rising_edge(clock)) then
+    process (clk_i) begin
+        if (rising_edge(clk_i)) then
             gbt_rx_req_reg  <= gbt_rx_req;
             gbt_rx_data_reg <= gbt_rx_data;
         end if;
@@ -169,11 +167,11 @@ begin
 
     link_request : entity work.link_request
     port map(
-        -- clocks
-        fabric_clock_i  => clock, -- 40 MHz logic clock
+        -- clks
+        clk_i  => clk_i, -- 40 MHz logic clk
 
         -- reset
-        reset_i         => reset,
+        rst_i         => rst,
 
         -- rx parallel data (from GBT)
         ipb_mosi_o    => ipb_mosi_o, -- 16 bit adr + 32 bit data + we

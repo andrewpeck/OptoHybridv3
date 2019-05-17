@@ -39,6 +39,8 @@ port(
 
     vfat_sbit_clusters_o   : out sbit_cluster_array_t(7 downto 0);
 
+    bitslip_cnt_o          : out t_std3_array (MXVFATS-1 downto 0);
+
     vfat_mask_i            : in std_logic_vector (MXVFATS-1 downto 0);
 
     sbits_mux_sel_i        : in  std_logic_vector (4 downto 0);
@@ -174,13 +176,17 @@ begin
         clk160_180             => clk160_180,
         clock                  => clk40_i,
 
+        bitslip_cnt_o          => bitslip_cnt_o,
+
         sot_is_aligned         => sot_is_aligned_o,
         sot_unstable           => sot_unstable_o,
 
         sot_tap_delay          => sot_tap_delay,
         trig_tap_delay         => trig_tap_delay,
 
-        sbits                  => sbits
+        sbits                  => sbits,
+
+        sump                   => open
     );
 
     --------------------------------------------------------------------------------------------------------------------

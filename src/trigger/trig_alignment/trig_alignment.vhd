@@ -16,6 +16,7 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.std_logic_misc.all;
 use ieee.numeric_std.all;
 
 Library UNISIM;
@@ -51,6 +52,8 @@ port(
 
     aligned_count_to_ready : in std_logic_vector (11 downto 0);
 
+    bitslip_cnt_o          : out t_std3_array (MXVFATS-1 downto 0);
+
     clock                  : in std_logic;
 
     clk80_0                : in std_logic;
@@ -58,7 +61,9 @@ port(
     clk160_90              : in std_logic;
     clk160_180             : in std_logic;
 
-    sbits                  : out std_logic_vector (( MXSBITS_CHAMBER - 1) downto 0)
+    sbits                  : out std_logic_vector (( MXSBITS_CHAMBER - 1) downto 0);
+
+    sump                   : out std_logic
 );
 end trig_alignment;
 
@@ -83,7 +88,12 @@ architecture Behavioral of trig_alignment is
     attribute EQUIVALENT_REGISTER_REMOVAL of sot_reset : signal is "NO";
     attribute EQUIVALENT_REGISTER_REMOVAL of  tu_reset : signal is "NO";
 
+    signal e4_sump        : std_logic_vector (4*8*MXVFATS-1 downto 0);
+    signal phase_sel_sump : std_logic_vector (2*8*MXVFATS-1 downto 0);
+
 begin
+
+    sump <= or_reduce (e4_sump) or or_reduce(phase_sel_sump);
 
     assert_fpga_type :
     IF ( FPGA_TYPE/="VIRTEX6" and FPGA_TYPE/="ARTIX7") GENERATE
@@ -174,9 +184,10 @@ begin
             rxdata_o      => sbits_unaligned ((ipin+1)*8 - 1 downto ipin*8),
             tap_delay_i   => trig_tap_delay(ipin),
             e4_in         => vfat_e4(ipin/8),
-            e4_out        => open,
             phase_sel_in  => vfat_phase_sel(ipin/8),
-            phase_sel_out => open
+
+            e4_out        => e4_sump((ipin+1)*4-1 downto ipin*4),
+            phase_sel_out => phase_sel_sump((ipin+1)*2-1 downto ipin*2)
         );
 
     end generate;
@@ -195,13 +206,13 @@ begin
 
             sbits_i => sbits_unaligned ((ivfat+1)*MXSBITS - 1 downto ivfat*MXSBITS),
             sbits_o => sbits((ivfat+1)*MXSBITS - 1 downto ivfat*MXSBITS),
-            mask    => vfat_mask(ivfat),
             reset_i => reset,
+
+            bitslip_cnt_o => bitslip_cnt_o(ivfat),
 
             start_of_frame => start_of_frame_8b(ivfat),
 
             clock          => clock,
-            clock4x        => clk160_0,
 
             aligned_count_to_ready => aligned_count_to_ready,
 

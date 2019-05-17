@@ -1,4 +1,14 @@
+ //--------------------------------------------------------------------------------
+ // CMS Muon Endcap
+ // GEM Collaboration
+ // Optohybrid v3 Firmware -- LED Controller
+ // A. Peck
+ //--------------------------------------------------------------------------------
+ // 2019/05/09 -- Add flash state machines to GBT link ready and MGTs ready
+ //--------------------------------------------------------------------------------
+
 module led_control (
+
   input clock,
 
   input mgts_ready,
@@ -6,8 +16,8 @@ module led_control (
   input pll_lock,
 
   input mmcm_locked,
-  input elink_mmcm_locked,
-  input logic_mmcm_locked,
+  input core_mmcm_locked,
+  input trigger_mmcm_locked,
 
   input gbt_eclk,
 
@@ -17,6 +27,7 @@ module led_control (
   input vfat_reset,
 
   input gbt_rxready,
+  input gbt_txready,
   input gbt_rxvalid,
   input gbt_link_ready,
   input gbt_request_received,
@@ -28,6 +39,7 @@ module led_control (
   output [31:0] cluster_rate,
 
   output reg [15:0] led_out
+
 );
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -51,13 +63,13 @@ module led_control (
 
   always @(*) begin
 
-    if (!gbt_rxready || !gbt_rxvalid)
+    if (!gbt_txready || !gbt_rxready || !gbt_rxvalid)
       led_out <= {led_logic[15:8],{8{fader_led}}};
 
     else if (!mmcm_locked)
       led_out <= {
         led_logic[15:8],
-        (led_err[7:0] |  { {4{elink_mmcm_locked}},{4{logic_mmcm_locked}}})
+        (led_err[7:0] |  { {4{core_mmcm_locked}},{4{trigger_mmcm_locked}}})
       };
 
     else if (cylon_mode)
@@ -166,12 +178,13 @@ module led_control (
 // TTC Flash
 //----------------------------------------------------------------------------------------------------------------------
 
-  wire bc0_flash, resync_flash, l1a_flash, vfat_reset_flash;
+  wire bc0_flash, resync_flash, l1a_flash, gbt_link_ready_flash, mgts_ready_flash;
 
-  x_flashsm flash_l1a        (ttc_l1a,    1'b0, clock, l1a_flash);
-  x_flashsm flash_bc0        (ttc_bc0,    1'b0, clock, bc0_flash);
-  x_flashsm flash_resync     (ttc_resync, 1'b0, clock, resync_flash);
-  x_flashsm flash_vfat_reset (vfat_reset, 1'b0, clock, vfat_reset_flash);
+  x_flashsm flash_l1a        (ttc_l1a,        1'b0, clock, l1a_flash);
+  x_flashsm flash_bc0        (ttc_bc0,        1'b0, clock, bc0_flash);
+  x_flashsm flash_resync     (ttc_resync,     1'b0, clock, resync_flash);
+  x_flashsm flash_gbt_ready  (gbt_link_ready, 1'b0, clock, gbt_link_ready_flash);
+  x_flashsm flash_mgts_ready (mgts_ready    , 1'b0, clock, mgts_ready_flash);
 
 //----------------------------------------------------------------------------------------------------------------------
 // Logic LED Assignments
@@ -181,8 +194,8 @@ module led_control (
 
   assign led_logic [15] = eclk_led;
   assign led_logic [14] = clk_led;
-  assign led_logic [13] = mgts_ready & clk_led;
-  assign led_logic [12] = gbt_link_ready & clk_led;
+  assign led_logic [13] = mgts_ready_flash & clk_led;
+  assign led_logic [12] = gbt_link_ready_flash & clk_led;
 
   assign led_logic [11] = gbt_flash;
   assign led_logic [10] = l1a_flash;
