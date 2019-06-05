@@ -8,13 +8,13 @@ resize_pblock [get_pblocks pblock_control] -add {RAMB18_X1Y60:RAMB18_X2Y79}
 resize_pblock [get_pblocks pblock_control] -add {RAMB36_X1Y30:RAMB36_X2Y39}
 create_pblock pblock_gbt
 add_cells_to_pblock [get_pblocks pblock_gbt] [get_cells -quiet [list gbt]]
-resize_pblock [get_pblocks pblock_gbt] -add {SLICE_X0Y150:SLICE_X21Y199}
-resize_pblock [get_pblocks pblock_gbt] -add {DSP48_X0Y60:DSP48_X0Y79}
-resize_pblock [get_pblocks pblock_gbt] -add {RAMB18_X0Y60:RAMB18_X0Y79}
-resize_pblock [get_pblocks pblock_gbt] -add {RAMB36_X0Y30:RAMB36_X0Y39}
+resize_pblock [get_pblocks pblock_gbt] -add {SLICE_X0Y100:SLICE_X39Y199}
+resize_pblock [get_pblocks pblock_gbt] -add {DSP48_X0Y40:DSP48_X0Y79}
+resize_pblock [get_pblocks pblock_gbt] -add {RAMB18_X0Y40:RAMB18_X0Y79}
+resize_pblock [get_pblocks pblock_gbt] -add {RAMB36_X0Y20:RAMB36_X0Y39}
 create_pblock pblock_ipb_switch_inst
 add_cells_to_pblock [get_pblocks pblock_ipb_switch_inst] [get_cells -quiet [list ipb_switch_inst]]
-resize_pblock [get_pblocks pblock_ipb_switch_inst] -add {SLICE_X22Y152:SLICE_X41Y179}
+resize_pblock [get_pblocks pblock_ipb_switch_inst] -add {SLICE_X32Y120:SLICE_X51Y147}
 create_pblock pblock_adc_inst
 add_cells_to_pblock [get_pblocks pblock_adc_inst] [get_cells -quiet [list adc_inst]]
 resize_pblock [get_pblocks pblock_adc_inst] -add {SLICE_X40Y180:SLICE_X47Y199}
@@ -40,3 +40,4 @@ set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
 connect_debug_port dbg_hub/clk [get_nets clk]
+

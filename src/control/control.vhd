@@ -81,6 +81,12 @@ port(
 
     soft_reset_o : out std_logic;
 
+    ---------
+    -- dna --
+    ---------
+
+    dna : in std_logic_vector (56 downto 0);
+
     -------------
     -- outputs --
     -------------
@@ -152,8 +158,6 @@ architecture Behavioral of control is
 
     signal reset : std_logic;
     signal cnt_reset : std_logic;
-
-    signal dna : std_logic_vector (56 downto 0);
 
     signal sump_vector : std_logic_vector (5 downto 0);
 
@@ -264,16 +268,6 @@ begin
         led_out              => led_o
     );
 
-    --------------------------------------------------------------------------------------------------------------------
-    -- Device DNA
-    --------------------------------------------------------------------------------------------------------------------
-
-    device_dna : entity work.device_dna
-    port map (
-        clock => clock_i,
-        reset => reset_i,
-        dna   => dna
-    );
 
     --------------------------------------------------------------------------------------------------------------------
     -- HDMI Signals
@@ -315,26 +309,26 @@ begin
     -- TTC
     --------------------------------------------------------------------------------------------------------------------
 
-    ttc_inst : entity work.ttc
+    ttc_inst : entity work.ttc_tmr
 
     port map (
 
         -- clock & reset
-        clock => clock_i,
-        reset => reset,
+        clock            => clock_i,
+        reset            => reset,
 
         -- ttc commands
-        ttc_bx0     => ttc_bc0,
-        bx0_local   => bx0_local,
-        ttc_resync  => ttc_resync,
+        ttc_bx0          => ttc_bc0,
+        bx0_local        => bx0_local,
+        ttc_resync       => ttc_resync,
 
         -- control
-        bxn_offset => ttc_bxn_offset,
+        bxn_offset       => ttc_bxn_offset,
 
         -- output
-       bxn_counter     => ttc_bxn_counter,
-       bx0_sync_err    => ttc_bx0_sync_err,
-       bxn_sync_err    => ttc_bxn_sync_err
+       bxn_counter       => ttc_bxn_counter,
+       bx0_sync_err      => ttc_bx0_sync_err,
+       bxn_sync_err      => ttc_bxn_sync_err
 
     );
 
@@ -390,7 +384,7 @@ begin
     --==== Registers begin ==========================================================================
 
     -- IPbus slave instanciation
-    ipbus_slave_inst : entity work.ipbus_slave
+    ipbus_slave_inst : entity work.ipbus_slave_tmr
         generic map(
            g_NUM_REGS             => REG_CONTROL_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_CONTROL_ADDRESS_MSB,

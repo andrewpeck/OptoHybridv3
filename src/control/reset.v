@@ -27,6 +27,8 @@ module reset (
   output reset_o
 );
 
+  parameter TMR_INSTANCE = 0;
+
   parameter MXRESETB = 10;
   reg [MXRESETB-1:0] soft_reset_delay = 0;
   reg soft_reset_start=0;

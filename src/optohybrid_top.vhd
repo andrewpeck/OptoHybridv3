@@ -126,6 +126,8 @@ architecture Behavioral of optohybrid_top is
     signal core_reset       : std_logic;
     signal cnt_snap         : std_logic;
 
+    signal dna : std_logic_vector (56 downto 0);
+
     signal ctrl_reset_vfats       : std_logic_vector (11 downto 0);
     signal ttc_resync             : std_logic;
     signal ttc_l1a                : std_logic;
@@ -312,7 +314,7 @@ begin
     ipb_mosi_masters(0) <= ipb_mosi_gbt;
     ipb_miso_gbt <= ipb_miso_masters(0);
 
-    ipb_switch_inst : entity work.ipb_switch
+    ipb_switch_inst : entity work.ipb_switch_tmr
     port map(
         clock_i              => clk_1x,
         reset_i              => core_reset,
@@ -373,6 +375,9 @@ begin
         mmcms_locked_i         => mmcms_locked,
         trigger_mmcm_locked_i  => trigger_mmcm_locked,
         core_mmcm_locked_i     => core_mmcm_locked,
+
+        -- GBT
+        dna  => dna,
 
         -- GBT
 
@@ -473,6 +478,17 @@ begin
         vfat_sot_p            => vfat_sot_p,
         vfat_sot_n            => vfat_sot_n
 
+    );
+
+    --------------------------------------------------------------------------------------------------------------------
+    -- Device DNA
+    --------------------------------------------------------------------------------------------------------------------
+
+    device_dna : entity work.device_dna
+    port map (
+        clock => clk_1x,
+        reset => core_reset,
+        dna   => dna
     );
 
     --------------------------------------------------------------------------------------------------------------------

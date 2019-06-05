@@ -19,6 +19,7 @@
 //--------------------------------------------------------------------------------
 
 module ttc #(
+  parameter TMR_INSTANCE   = 0,
   parameter HOLD_UNTIL_BX0 = 0,
   parameter MXBXN          = 12 // Number BXN bits, LHC bunchs numbered 0 to 3563
 ) (

@@ -1,3 +1,6 @@
+set_property IOB TRUE [all_inputs]
+set_property IOB TRUE [all_outputs]
+
 ## CLOCKS FROM GBTX1 CLOCKDESX LINES
 ## BANK 14
 set_property PACKAGE_PIN W19 [get_ports clock_p]
@@ -312,8 +315,8 @@ set_property PACKAGE_PIN F14 [get_ports elink_i_n]
 set_property PACKAGE_PIN F16 [get_ports elink_o_p]
 set_property PACKAGE_PIN E17 [get_ports elink_o_n]
 
-set_property PACKAGE_PIN J19 [get_ports elink_clock_p]
-set_property PACKAGE_PIN H19 [get_ports elink_clock_n]
+#set_property PACKAGE_PIN J19 [get_ports elink_clock_p]
+#set_property PACKAGE_PIN H19 [get_ports elink_clock_n]
 
 ## STATUSES & LEDs & TEST POINTS
 

@@ -8,6 +8,7 @@
 --   This module implements all functionality required for communicating with GBTx
 ----------------------------------------------------------------------------------
 -- 2017/07/24 -- Initial. Wrapper around GBT components to simplify top-level
+-- 2019/05/13 -- Misc. Cleanup
 ----------------------------------------------------------------------------------
 
 library ieee;
@@ -131,6 +132,7 @@ begin
         end if;
     end process;
 
+    -- TODO: TMR
     process (clk_1x) begin
         if (rising_edge(clk_1x)) then
             l1a_o        <= l1a_force     or  l1a_gbt;
@@ -174,7 +176,7 @@ begin
     -- GBT Link
     --------------------------------------------------------------------------------------------------------------------
 
-    gbt_link : entity work.gbt_link
+    gbt_link : entity work.gbt_link_tmr
     port map(
 
         -- rst
@@ -210,7 +212,7 @@ begin
     --==== Registers begin ==========================================================================
 
     -- IPbus slave instanciation
-    ipbus_slave_inst : entity work.ipbus_slave
+    ipbus_slave_inst : entity work.ipbus_slave_tmr
         generic map(
            g_NUM_REGS             => REG_GBT_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_GBT_ADDRESS_MSB,

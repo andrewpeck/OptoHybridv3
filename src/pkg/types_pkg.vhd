@@ -23,7 +23,6 @@ package types_pkg is
     type t_std64_array is array(integer range <>) of std_logic_vector(63 downto 0);
 
 
-
     --==================--
     --== Trigger data ==--
     --==================--

@@ -14,7 +14,7 @@ library work;
 use work.types_pkg.all;
 use work.ipbus_pkg.all;
 
-entity ipb_switch is
+entity ipb_switch is generic( g_TMR_INSTANCE : integer := 0);
 port(
 
     clock_i   : in std_logic;

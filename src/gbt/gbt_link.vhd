@@ -26,32 +26,31 @@ library work;
 use work.types_pkg.all;
 use work.ipbus_pkg.all;
 
-entity gbt_link is
+entity gbt_link is generic( g_TMR_INSTANCE : integer := 0);
 port(
-
     -- reset
-    rst_i         : in std_logic;
+    rst_i : in std_logic;
 
     -- clk inputs
-    clk_i         : in std_logic;
+    clk_i : in std_logic;
 
     -- parallel data to/from serdes
-    data_i          : in std_logic_vector (7 downto 0);
-    data_o          : out std_logic_vector(7 downto 0);
+    data_i : in std_logic_vector (7 downto 0);
+    data_o : out std_logic_vector(7 downto 0);
 
     -- wishbone
-    ipb_mosi_o    : out ipb_wbus;
-    ipb_miso_i    : in  ipb_rbus;
+    ipb_mosi_o : out ipb_wbus;
+    ipb_miso_i : in  ipb_rbus;
 
     -- decoded ttc
-    l1a_o           : out std_logic;
-    bc0_o           : out std_logic;
-    resync_o        : out std_logic;
+    l1a_o    : out std_logic;
+    bc0_o    : out std_logic;
+    resync_o : out std_logic;
 
     -- status
-    rdy_o         : out std_logic;
-    err_o         : out std_logic;
-    unstable_o      : out std_logic
+    rdy_o      : out std_logic;
+    err_o      : out std_logic;
+    unstable_o : out std_logic
 
 );
 end gbt_link;

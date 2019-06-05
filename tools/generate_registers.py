@@ -94,6 +94,7 @@ class Module:
                          + '    Register address LSB = ' + hex(self.regAddressLsb) + '\n'\
                          + '    File = ' + str(self.file) + '\n'\
                          + '    User clock = ' + str(self.userClock) + '\n'\
+                         + '    Use TMR    = ' + str(self.useTMR) + '\n'\
                          + '    Bus clock = ' + str(self.busClock) + '\n'\
                          + '    Bus reset = ' + str(self.busReset) + '\n'\
                          + '    Master_bus = ' + str(self.masterBus) + '\n'\
@@ -295,12 +296,16 @@ def findRegisters(node, baseName, baseAddress, modules, currentModule, vars, isG
         else:
             module.regAddressMsb = parseInt(node.get('fw_reg_addr_msb'))
             module.regAddressLsb = parseInt(node.get('fw_reg_addr_lsb'))
-            module.file = node.get('fw_module_file')
-            module.userClock = node.get('fw_user_clock_signal')
-            module.busClock = node.get('fw_bus_clock_signal')
-            module.busReset = node.get('fw_bus_reset_signal')
-            module.masterBus = node.get('fw_master_bus_signal')
-            module.slaveBus = node.get('fw_slave_bus_signal')
+            module.file          = node.get('fw_module_file')
+            module.userClock     = node.get('fw_user_clock_signal')
+            if (node.get('fw_use_tmr') is not None and node.get('fw_use_tmr')=='true'):
+                module.useTMR        = True
+            else:
+                module.useTMR        = False
+            module.busClock      = node.get('fw_bus_clock_signal')
+            module.busReset      = node.get('fw_bus_reset_signal')
+            module.masterBus     = node.get('fw_master_bus_signal')
+            module.slaveBus      = node.get('fw_slave_bus_signal')
         if not module.isValid():
             error = 'One or more parameters for module ' + module.name + ' is missing... ' + module.toString()
             raise ValueError(error)
@@ -877,9 +882,15 @@ def updateModuleFile(module):
                     f.write ('    signal %s : std_logic_vector (%s downto 0) := (others => \'0\');\n' % (reg.signal,  reg.msb-reg.lsb))
 
         # slave section
+        module_type = ""
+        if (module.useTMR):
+            module_type = "ipbus_slave_tmr"
+        else:
+            module_type = "ipbus_slave"
+
         if VHDL_REG_SLAVE_MARKER_START in line:
             slaveSectionFound = True
-            slaveDeclaration =  '    ipbus_slave_inst : entity work.ipbus_slave\n'\
+            slaveDeclaration =  '    ipbus_slave_inst : entity work.%s\n' % (module_type) + \
                                 '        generic map(\n'\
                                 '           g_NUM_REGS             => %s,\n' % (VHDL_REG_CONSTANT_PREFIX + module.getVhdlName() + '_NUM_REGS') + \
                                 '           g_ADDR_HIGH_BIT        => %s,\n' % (VHDL_REG_CONSTANT_PREFIX + module.getVhdlName() + '_ADDRESS_MSB') + \

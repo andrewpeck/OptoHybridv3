@@ -25,9 +25,11 @@ def write_cluster_packer (file_handle):
     padding = "" #spaces for indentation
 
     if (gem_version=="ge21"):
+        f.write ('%s//`define invert_partitions\n'                              %  (padding))
         f.write ('%s`define oh_lite\n'                                           %  (padding))
     else:
         f.write ('%s//`define oh_lite\n'                                         %  (padding))
+        f.write ('%s`define invert_partitions\n'                              %  (padding))
 
     if (ge11_full_cluster_builder):
         f.write ('%s`define full_chamber_finder\n'                               %  (padding))

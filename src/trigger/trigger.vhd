@@ -387,46 +387,46 @@ begin
     sbits : entity work.sbits
     port map (
 
-        trig_stop_i             => trig_stop_i,
+        trig_stop_i            => trig_stop_i,
 
-        clk40_i                 => clk_40_sbit,
-        clk80_i                 => clk_80_sbit,
-        clk160_i                => clk_160_sbit,
-        clk160_90_i             => clk_160_90_sbit,
-        clk200_i                => clk_200_sbit,
+        clk40_i                => clk_40_sbit,
+        clk80_i                => clk_80_sbit,
+        clk160_i               => clk_160_sbit,
+        clk160_90_i            => clk_160_90_sbit,
+        clk200_i               => clk_200_sbit,
 
-        sbits_mux_sel_i         => sbits_mux_sel,
-        sbits_mux_o             => sbits_mux,
+        sbits_mux_sel_i        => sbits_mux_sel,
+        sbits_mux_o            => sbits_mux,
 
-        aligned_count_to_ready   => aligned_count_to_ready,
+        aligned_count_to_ready => aligned_count_to_ready,
 
-        reset_i                 => trigger_reset,
+        reset_i                => trigger_reset,
 
-        bitslip_cnt_o            => bitslip_cnt,
+        bitslip_cnt_o          => bitslip_cnt,
 
-        sbits_p                  => vfat_sbits_p,
-        sbits_n                  => vfat_sbits_n,
+        sbits_p                => vfat_sbits_p,
+        sbits_n                => vfat_sbits_n,
 
-        start_of_frame_p         => vfat_sot_p,
-        start_of_frame_n         => vfat_sot_n,
+        start_of_frame_p       => vfat_sot_p,
+        start_of_frame_n       => vfat_sot_n,
 
-        vfat_mask_i  => vfat_mask (MXVFATS -1 downto 0),
-        sot_invert_i => sot_invert (MXVFATS-1 downto 0),
-        tu_invert_i  => tu_invert,
-        tu_mask_i    => tu_mask,
+        vfat_mask_i            => vfat_mask  (MXVFATS-1 downto 0),
+        sot_invert_i           => sot_invert (MXVFATS-1 downto 0),
+        tu_invert_i            => tu_invert,
+        tu_mask_i              => tu_mask,
 
-        active_vfats_o          => active_vfats,
+        active_vfats_o         => active_vfats,
 
-        vfat_sbit_clusters_o    => sbit_clusters,
-        trigger_deadtime_i      => trig_deadtime,
-        cluster_count_o         => cluster_count,
-        overflow_o              => sbit_overflow,
+        vfat_sbit_clusters_o   => sbit_clusters,
+        trigger_deadtime_i     => trig_deadtime,
+        cluster_count_o        => cluster_count,
+        overflow_o             => sbit_overflow,
 
-        sot_tap_delay           => sot_tap_delay,
-        trig_tap_delay          => trig_tap_delay,
+        sot_tap_delay          => sot_tap_delay,
+        trig_tap_delay         => trig_tap_delay,
 
-        sot_is_aligned_o        => sot_is_aligned,
-        sot_unstable_o          => sot_unstable
+        sot_is_aligned_o       => sot_is_aligned,
+        sot_unstable_o         => sot_unstable
 
     );
 
@@ -536,7 +536,7 @@ begin
     --==== Registers begin ==========================================================================
 
     -- IPbus slave instanciation
-    ipbus_slave_inst : entity work.ipbus_slave
+    ipbus_slave_inst : entity work.ipbus_slave_tmr
         generic map(
            g_NUM_REGS             => REG_TRIG_NUM_REGS,
            g_ADDR_HIGH_BIT        => REG_TRIG_ADDRESS_MSB,
