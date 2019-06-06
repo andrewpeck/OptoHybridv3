@@ -71,16 +71,16 @@ module   mgt_control_tmr #(
     .ext_txpllpowerdown_i   (ext_txpllpowerdown_i   ),
 
     // outputs
-    .gtxtest_reset_o    (gtxtest_reset_tmr),
-    .mgt_realign_o      (mgt_realign_tmr),
-    .mgt_reset_o        (mgt_reset_tmr),
-    .pll_reset_o        (pll_reset_tmr),
-    .txpllpowerdown_o   (txpllpowerdown_tmr),
-    .txpowerdown_mode_o (txpowerdown_mode_tmr),
-    .txpowerdown_o      (txpowerdown_tmr),
-    .txreset_o          (txreset_tmr),
-    .ready_o            (ready_tmr)
-  );
+    .gtxtest_reset_o    (gtxtest_reset_tmr    [I]),
+    .mgt_realign_o      (mgt_realign_tmr      [I]),
+    .mgt_reset_o        (mgt_reset_tmr        [I]),
+    .pll_reset_o        (pll_reset_tmr        [I]),
+    .txpllpowerdown_o   (txpllpowerdown_tmr   [I]),
+    .txpowerdown_mode_o (txpowerdown_mode_tmr [I]),
+    .txpowerdown_o      (txpowerdown_tmr      [I]),
+    .txreset_o          (txreset_tmr          [I]),
+    .ready_o            (ready_tmr            [I])
+  ) ;
   end
   endgenerate
 
@@ -137,7 +137,7 @@ module   mgt_control_tmr #(
     .c (txpowerdown_tmr[2]),
     .y (txpowerdown_o)
   );
-  majority #(.g_NUM_BITS(3)) majority_mgt_reset (
+  majority #(.g_NUM_BITS(4)) majority_mgt_reset (
     .a (mgt_reset_tmr[0]),
     .b (mgt_reset_tmr[1]),
     .c (mgt_reset_tmr[2]),

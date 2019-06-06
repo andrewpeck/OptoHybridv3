@@ -37,15 +37,15 @@ module mgt_data_tmr #(
     .FRAME_CTRL_TTC (FRAME_CTRL_TTC)
     ) mgt_data (
     // inputs
-    .gem_data         (gem_data_sync),    // 56 bit gem data
-    .overflow_i       (overflow),         // 1 bit gem has more than 8 clusters
+    .gem_data         (gem_data),         // 56 bit gem data
+    .overflow_i       (overflow_i),       // 1 bit gem has more than 8 clusters
     .bxn_counter_lsbs (bxn_counter_lsbs), // 2 bit bxn counter lsbs
-    .bc0_i            (bc0),              // 1  bit bx0 flag
-    .resync_i         (resync),           // 1  bit resync flag
+    .bc0_i            (bc0_i),            // 1  bit bx0 flag
+    .resync_i         (resync_i),         // 1  bit resync flag
 
-    .ready(mgt_startup_done),
+    .ready(ready),
 
-    .clk_160(usrclk_160),
+    .clk_160(clk_160),
 
     .reset(reset),
 
@@ -60,14 +60,14 @@ module mgt_data_tmr #(
     end
   endgenerate
 
-  majority #(.g_NUM_BITS(15)) majority_trg_tx_data_a (
+  majority #(.g_NUM_BITS(16)) majority_trg_tx_data_a (
     .a (trg_tx_data_a_tmr[0]),
     .b (trg_tx_data_a_tmr[1]),
     .c (trg_tx_data_a_tmr[2]),
     .y (trg_tx_data_a)
   );
 
-  majority #(.g_NUM_BITS(15)) majority_trg_tx_data_b (
+  majority #(.g_NUM_BITS(16)) majority_trg_tx_data_b (
     .a (trg_tx_data_b_tmr[0]),
     .b (trg_tx_data_b_tmr[1]),
     .c (trg_tx_data_b_tmr[2]),

@@ -107,6 +107,9 @@ begin
     --============--
 
     gbt_rx : entity work.gbt_rx
+    generic map(
+        g_TMR_INSTANCE => g_TMR_INSTANCE
+    )
     port map(
         -- reset
         rst_i      => rst,
@@ -135,6 +138,9 @@ begin
     --============--
 
     gbt_tx : entity work.gbt_tx
+    generic map(
+        g_TMR_INSTANCE => g_TMR_INSTANCE
+    )
     port map(
         -- reset
         rst_i     => rst,

@@ -110,13 +110,13 @@ module   mgt_control #(
   assign mgt_reset_o[1] = ext_mgt_reset_i[1]   || (startup_reset_cnt <  MGT_RESET_CNT1);
   assign mgt_reset_o[2] = ext_mgt_reset_i[2]   || (startup_reset_cnt <  MGT_RESET_CNT2);
   assign mgt_reset_o[3] = ext_mgt_reset_i[3]   || (startup_reset_cnt <  MGT_RESET_CNT3);
-  wire gtxtest_start    = ext_gtxtest_start_i  || (startup_reset_cnt == GTXTEST_RESET_CNT);
-  wire txreset_o        = ext_txreset_i        || (startup_reset_cnt == TXRESET_CNT);
-  wire mgt_realign_o    = ext_mgt_realign_i    || (startup_reset_cnt == MGT_REALIGN_CNT);
-  wire txpowerdown_o    = ext_txpowerdown_i    || (startup_reset_cnt <  TXPOWERDOWN_CNT);
-  wire txpllpowerdown_o = ext_txpllpowerdown_i || (startup_reset_cnt <  PLL_POWERDOWN_CNT);
+  assign gtxtest_start    = ext_gtxtest_start_i  || (startup_reset_cnt == GTXTEST_RESET_CNT);
+  assign txreset_o        = ext_txreset_i        || (startup_reset_cnt == TXRESET_CNT);
+  assign mgt_realign_o    = ext_mgt_realign_i    || (startup_reset_cnt == MGT_REALIGN_CNT);
+  assign txpowerdown_o    = ext_txpowerdown_i    || (startup_reset_cnt <  TXPOWERDOWN_CNT);
+  assign txpllpowerdown_o = ext_txpllpowerdown_i || (startup_reset_cnt <  PLL_POWERDOWN_CNT);
 
-  wire [1:0] txpowerdown_mode = {2{txpowerdown_o}} & ext_txpowerdown_mode_i;
+  assign txpowerdown_mode_o = {2{txpowerdown_o}} & ext_txpowerdown_mode_i;
 
   assign startup_done   = (startup_reset_cnt >  DONE_CNT);
 

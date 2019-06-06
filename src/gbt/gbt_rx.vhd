@@ -28,7 +28,8 @@ entity gbt_rx is
 generic(
     g_FRAME_COUNT_MAX : integer := 8;  -- number of frames in a request packet
     g_FRAME_WIDTH     : integer := 6;  -- number of data bits per frame
-    g_RDY_COUNT_MAX : integer := 64 -- number of good consecutive frames to mark the output as ready
+    g_RDY_COUNT_MAX   : integer := 64; -- number of good consecutive frames to mark the output as ready
+    g_TMR_INSTANCE    : integer := 0
 );
 port(
 

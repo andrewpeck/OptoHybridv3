@@ -60,8 +60,7 @@ module   gem_data_out #(
   // Core Signals
   //----------------------------------------------------------------------------------------------------------------------
 
-  wire usrclk_160;
-  wire reset;
+  wire reset = reset_i;
 
   //--------------------------------------------------------------------------------------------------------------------
   // Control signals
@@ -132,15 +131,15 @@ module   gem_data_out #(
   .ALLOW_TTC_CHARS(ALLOW_TTC_CHARS),
   .FRAME_CTRL_TTC (FRAME_CTRL_TTC)
   ) mgt_data_tmr (
-  .gem_data         (gem_data_sync),    // 56 bit gem data
-  .overflow_i       (overflow),         // 1 bit gem has more than 8 clusters
-  .bxn_counter_lsbs (bxn_counter_lsbs), // 2 bit bxn counter lsbs
-  .bc0_i            (bc0),              // 1  bit bx0 flag
-  .resync_i         (resync),           // 1  bit resync flag
+  .gem_data         (gem_data),           // 56 bit gem data
+  .overflow_i       (overflow_i),         // 1 bit gem has more than 8 clusters
+  .bxn_counter_lsbs (bxn_counter_i[1:0]), // 2 bit bxn counter lsbs
+  .bc0_i            (bc0_i),              // 1  bit bx0 flag
+  .resync_i         (resync_i),           // 1  bit resync flag
 
   .ready(mgt_startup_done),
 
-  .clk_160(usrclk_160),
+  .clk_160(clock_160),
 
   .reset(reset),
 
@@ -171,31 +170,14 @@ module   gem_data_out #(
 
       initial $display ("Generating optical links for Artix-7");
 
-
       always @(posedge clock_160) begin
         mgt_startup_done <= &tx_fsm_reset_done;
       end
       assign txfsm_done_o = &tx_fsm_reset_done;
 
-      synchronizer synchronizer_reset      (.async_i (reset_i),   .clk_i (usrclk_160), .sync_o (reset));
-      synchronizer synchronizer_ready_sync (.async_i (mgt_startup_done),     .clk_i (usrclk_160), .sync_o (ready_sync));
-      synchronizer synchronizer_mgtrst     (.async_i (mgt_reset[0]), .clk_i (usrclk_160), .sync_o (mgt_reset_sync));
-
-      cluster_data_cdc
-      cluster_data_cdc (
-        .wr_clk        (clock_40),
-        .rd_clk        (usrclk_160),
-        .din           ({gem_data,     bc0_i, resync_i, bxn_counter_i[1:0],  overflow_i}),
-        .dout          ({gem_data_sync,bc0,   resync,   bxn_counter_lsbs,    overflow    }),
-        .full          (),
-        .empty         (),
-        .wr_en         (mgt_startup_done),
-        .rd_en         (tx_frame==0)
-      );
-
       a7_gtp_wrapper a7_gtp_wrapper (
 
-        .soft_reset_tx_in          (mgt_reset[0]),
+        .soft_reset_tx_in  (mgt_reset[0]),
 
         .pll_lock_out (pll_lock),
 
@@ -219,10 +201,7 @@ module   gem_data_out #(
 
         .tx_fsm_reset_done         (tx_fsm_reset_done),
 
-        .gt0_txusrclk_o            (usrclk_160),
-        .gt1_txusrclk_o            (),
-        .gt2_txusrclk_o            (),
-        .gt3_txusrclk_o            ()
+        .txusrclk_i                (clock_160)
       );
   end
   endgenerate
@@ -231,16 +210,6 @@ module   gem_data_out #(
   if (FPGA_TYPE_IS_VIRTEX6) begin
 
       initial $display ("Generating optical links for Virtex-6");
-
-      assign gem_data_sync    = gem_data;
-      assign ready_sync       = mgt_startup_done;
-      assign reset            = reset_i;
-      assign reset_sync       = reset;
-      assign bc0              = bc0_i;
-      assign resync           = resync_i;
-      assign bxn_counter_lsbs = bxn_counter_i[1:0];
-      assign overflow         = overflow_i;
-      assign usrclk_160       = clock_160;
 
       assign pll_lock_o = &pll_lock;
 

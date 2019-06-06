@@ -26,7 +26,8 @@ library work;
 entity gbt_tx is
     generic(
         g_FRAME_COUNT_MAX : integer := 6;
-        g_FRAME_WIDTH     : integer := 6
+        g_FRAME_WIDTH     : integer := 6;
+        g_TMR_INSTANCE    : integer := 0
     );
     port(
     clk_i       : in std_logic;
