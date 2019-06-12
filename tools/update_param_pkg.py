@@ -44,6 +44,13 @@ def write_param_pkg (file_handle):
     f.write ('%sconstant MXLED    : integer := %d;\n'                                           %  (padding, mxleds))
     f.write ('%sconstant MXRESET  : integer := %d;\n'                                           %  (padding, mxresets))
     f.write ('%sconstant MXREADY  : integer := %d;\n'                                           %  (padding, mxready))
+    f.write ('\n')
+
+    cluster_clock_speed = 160
+    if (ge21_five_cluster):
+        cluster_clock_speed = 200
+
+    f.write ('%sconstant CLUSTER_CLOCK_SPEED  : integer := %d;\n'                               %  (padding, cluster_clock_speed))
 
 if __name__ == '__main__':
     main()

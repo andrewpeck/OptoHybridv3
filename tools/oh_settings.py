@@ -17,9 +17,6 @@ ge21_five_cluster        = True
 
 ge11_full_cluster_builder = False
 
-firmware_year            = now.year
-firmware_month           = now.month
-firmware_day             = now.day
 
 release_hardware        = "00"
 fpga_type                = "NULL"

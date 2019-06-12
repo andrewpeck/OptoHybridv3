@@ -28,7 +28,7 @@ module   gem_data_out #(
   //--------------------------------------------------------------------------------------------------------------------
   // Data
   //--------------------------------------------------------------------------------------------------------------------
-  input [56*2-1:0]  gem_data,      // 56 bit gem data
+  input [56*2-1:0]  gem_data_i,    // 56 bit gem data
   input             overflow_i,    // 1 bit gem has more than 8 clusters
   input [11:0]      bxn_counter_i, // 12 bit bxn counter
   input             bc0_i,         // 1  bit bx0 flag
@@ -77,6 +77,12 @@ module   gem_data_out #(
   wire pll_reset;
 
   reg mgt_startup_done;
+
+  (*shreg_extract ="no"*) reg [56*2-1:0]  gem_data;         // 56 bit gem data
+  (*shreg_extract ="no"*) reg             bc0;              //
+  (*shreg_extract ="no"*) reg             resync;           //
+  (*shreg_extract ="no"*) reg             overflow;         //
+  (*shreg_extract ="no"*) reg [1:0]       bxn_counter_lsbs; //
 
   //--------------------------------------------------------------------------------------------------------------------
   // Control
@@ -131,11 +137,11 @@ module   gem_data_out #(
   .ALLOW_TTC_CHARS(ALLOW_TTC_CHARS),
   .FRAME_CTRL_TTC (FRAME_CTRL_TTC)
   ) mgt_data_tmr (
-  .gem_data         (gem_data),           // 56 bit gem data
-  .overflow_i       (overflow_i),         // 1 bit gem has more than 8 clusters
-  .bxn_counter_lsbs (bxn_counter_i[1:0]), // 2 bit bxn counter lsbs
-  .bc0_i            (bc0_i),              // 1  bit bx0 flag
-  .resync_i         (resync_i),           // 1  bit resync flag
+  .gem_data         (gem_data),         // 56 bit gem data
+  .overflow_i       (overflow),         // 1 bit gem has more than 8 clusters
+  .bxn_counter_lsbs (bxn_counter_lsbs), // 2 bit bxn counter lsbs
+  .bc0_i            (bc0),              // 1  bit bx0 flag
+  .resync_i         (resync),           // 1  bit resync flag
 
   .ready(mgt_startup_done),
 
@@ -170,8 +176,12 @@ module   gem_data_out #(
 
       initial $display ("Generating optical links for Artix-7");
 
-      always @(posedge clock_160) begin
+      always @(*) begin
         mgt_startup_done <= &tx_fsm_reset_done;
+        gem_data         <= gem_data_i;
+        bc0              <= bc0_i;
+        resync           <= resync_i;
+        bxn_counter_lsbs <= bxn_counter_i[1:0];
       end
       assign txfsm_done_o = &tx_fsm_reset_done;
 
@@ -213,7 +223,15 @@ module   gem_data_out #(
 
       assign pll_lock_o = &pll_lock;
 
+      always @(*) begin
+        gem_data         <= gem_data_i;
+        bc0              <= bc0_i;
+        resync           <= resync_i;
+        bxn_counter_lsbs <= bxn_counter_i[1:0];
+      end
+
       always @(*) mgt_startup_done <= (&tx_sync_done) && (&tx_fsm_reset_done) && (&pll_lock);
+
       assign txfsm_done_o = &tx_fsm_reset_done;
 
       v6_gtx_wrapper v6_gtx_wrapper (

@@ -37,6 +37,7 @@ module frame_aligner (
   //  Parameters
   //--------------------------------------------------------------------------------------------------------------------
 
+  parameter TMR_INSTANCE=0;
   parameter DDR=0;
   parameter MXSBITS=64*(1+DDR);
   parameter FRAME_SIZE = 8*(1+DDR);

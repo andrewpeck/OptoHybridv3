@@ -60,6 +60,7 @@ port(
     clk160_0               : in std_logic;
     clk160_90              : in std_logic;
     clk160_180             : in std_logic;
+    clk200_0               : in std_logic;
 
     sbits                  : out std_logic_vector (( MXSBITS_CHAMBER - 1) downto 0);
 
@@ -68,6 +69,8 @@ port(
 end trig_alignment;
 
 architecture Behavioral of trig_alignment is
+
+    signal cluster_clock      : std_logic;
 
     signal reset              : std_logic := '0';
     signal start_of_frame_8b  : t_std8_array (MXVFATS-1 downto 0);
@@ -196,6 +199,8 @@ begin
     -- Frame alignment
     --------------------------------------------------------------------------------------------------------------------
 
+    cluster_clock <= clock; -- clk200_0 when (cluster_clock_speed = 200) else clk160_0;
+
     aligner_loop: for ivfat in 0 to MXVFATS-1 generate begin
 
         frame_aligner_inst : entity work.frame_aligner
@@ -212,7 +217,7 @@ begin
 
             start_of_frame => start_of_frame_8b(ivfat),
 
-            clock          => clock,
+            clock          => cluster_clock,
 
             aligned_count_to_ready => aligned_count_to_ready,
 
@@ -222,6 +227,7 @@ begin
         );
 
     end generate;
+
 
     sot_is_aligned <= sot_is_aligned_int;
 

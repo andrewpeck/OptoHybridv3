@@ -146,7 +146,7 @@ begin
   -- Data Recovery Unit
   ----------------------------------------------------------------------------------------------------------------------
 
-  dru: entity work.dru
+  dru_tmr: entity work.dru_tmr
   generic map(
     g_PHASE_SEL_EXTERNAL => g_PHASE_SEL_EXTERNAL
   )
@@ -156,8 +156,8 @@ begin
           clk2x         => clk2x_logic,   --
           phase_sel_in  => phase_sel_in,  --
           phase_sel_out => phase_sel_out, --
-          e4_in         => e4_in,  --
-          e4_out        => e4_out, --
+          e4_in         => e4_in,         --
+          e4_out        => e4_out,        --
           o             => rxdata,        -- 8-bit deserialized data
           vo            => rxce           -- rx valid
   );

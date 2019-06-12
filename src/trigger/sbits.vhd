@@ -174,6 +174,7 @@ begin
         clk160_0               => clk160_i,
         clk160_90              => clk160_90_i,
         clk160_180             => clk160_180,
+        clk200_0               => clk200_i,
         clock                  => clk40_i,
 
         bitslip_cnt_o          => bitslip_cnt_o,

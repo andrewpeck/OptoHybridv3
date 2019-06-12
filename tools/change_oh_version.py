@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from insert_code import *
 import sys
+import datetime
+
 
 OH_SETTINGS_FILE = './oh_settings.py'
 MARKER_START     = '# START: OH_VERSION'
@@ -10,7 +12,8 @@ MARKER_END       = '# END: OH_VERSION'
 def main():
 
     if (len(sys.argv) < 6):
-        print('Arguments: <gem_station> <oh_version> <geb_version> <geb_length> <firmware_version>')
+        print('Arguments: <gem_station> <oh_version> <geb_version> <geb_length> <firmware_version> [<date>]')
+        print('e.g.: sh update_oh_firmware.sh ge21 v3c v3c short 03.02.04')
         sys.exit(1)
 
     def write_oh_version (file_handle):
@@ -24,11 +27,28 @@ def main():
         f.write ('firmware_version_major   = "%s"\n' % (firmware_version_major   ))
         f.write ('firmware_version_minor   = "%s"\n' % (firmware_version_minor   ))
         f.write ('firmware_release_version = "%s"\n' % (firmware_release_version ))
+        f.write ('firmware_year            = %d\n' % (firmware_year ))
+        f.write ('firmware_month           = %d\n' % (firmware_month))
+        f.write ('firmware_day             = %d\n' % (firmware_day  ))
+
 
     gem_version              = sys.argv[1]
     oh_version               = sys.argv[2]
     geb_version              = sys.argv[3]
     geb_length               = sys.argv[4]
+
+    now = datetime.datetime.now()
+    firmware_year            = (now.year)
+    firmware_month           = (now.month)
+    firmware_day             = (now.day)
+
+    if (len(sys.argv)==7):
+
+        date           = sys.argv[6].split('.')
+        firmware_year  = date[0]
+        firmware_month = date[1]
+        firmware_day   = date[2]
+
 
     version = sys.argv[5].split('.')
     if (len(version) != 3):

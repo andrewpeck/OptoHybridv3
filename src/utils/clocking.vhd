@@ -117,7 +117,7 @@ begin
         IB => clock_i_n
     );
 
-    trigger_clocking : entity work.logic_clocking
+    trigger_clocking : entity work.trigger_clocking
     port map(
         clk_in1           => clock_i,
 
@@ -132,7 +132,7 @@ begin
         locked_o          => mmcm_locked(0)
     );
 
-    logic_clocking : entity work.gbt_clocking
+    logic_clocking : entity work.logic_clocking
     port map(
         clk_in1     => clock_i,
         clk40_o     => clock,

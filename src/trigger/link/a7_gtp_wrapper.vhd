@@ -99,7 +99,7 @@ begin
   common_i : entity work.a7_mgts_common
   generic map
   (
-    WRAPPER_SIM_GTRESET_SPEEDUP => string'("0"),
+    WRAPPER_SIM_GTRESET_SPEEDUP => string'("FALSE"),
     SIM_PLL0REFCLK_SEL => bit_vector'("001"),
     SIM_PLL1REFCLK_SEL => bit_vector'("001")
   )
